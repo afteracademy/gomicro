@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/auth/message"
+	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 )
 
 const (

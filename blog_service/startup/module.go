@@ -3,18 +3,18 @@ package startup
 import (
 	"context"
 
-	"github.com/unusualcodeorg/gomicro/blog-service/api/auth"
-	authMW "github.com/unusualcodeorg/gomicro/blog-service/api/auth/middleware"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/author"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/blog"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/blogs"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/editor"
-	"github.com/unusualcodeorg/gomicro/blog-service/config"
-	"github.com/unusualcodeorg/goserve/arch/micro"
-	coreMW "github.com/unusualcodeorg/goserve/arch/middleware"
-	"github.com/unusualcodeorg/goserve/arch/mongo"
-	"github.com/unusualcodeorg/goserve/arch/network"
-	"github.com/unusualcodeorg/goserve/arch/redis"
+	"github.com/afteracademy/gomicro/blog-service/api/auth"
+	authMW "github.com/afteracademy/gomicro/blog-service/api/auth/middleware"
+	"github.com/afteracademy/gomicro/blog-service/api/author"
+	"github.com/afteracademy/gomicro/blog-service/api/blog"
+	"github.com/afteracademy/gomicro/blog-service/api/blogs"
+	"github.com/afteracademy/gomicro/blog-service/api/editor"
+	"github.com/afteracademy/gomicro/blog-service/config"
+	"github.com/afteracademy/goserve/arch/micro"
+	coreMW "github.com/afteracademy/goserve/arch/middleware"
+	"github.com/afteracademy/goserve/arch/mongo"
+	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/arch/redis"
 )
 
 type Module micro.Module[module]

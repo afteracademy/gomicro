@@ -1,12 +1,12 @@
-module github.com/unusualcodeorg/gomicro/blog-service
+module github.com/afteracademy/gomicro/blog-service
 
 go 1.22.5
 
 require (
+	github.com/afteracademy/goserve v1.2.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/spf13/viper v1.19.0
-	github.com/unusualcodeorg/goserve v1.1.9
 	go.mongodb.org/mongo-driver v1.16.0
 )
 

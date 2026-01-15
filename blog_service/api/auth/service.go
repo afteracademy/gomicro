@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"github.com/unusualcodeorg/gomicro/blog-service/api/auth/message"
-	"github.com/unusualcodeorg/goserve/arch/micro"
-	"github.com/unusualcodeorg/goserve/arch/network"
+	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
+	"github.com/afteracademy/goserve/arch/micro"
+	"github.com/afteracademy/goserve/arch/network"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

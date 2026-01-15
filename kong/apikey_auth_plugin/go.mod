@@ -1,4 +1,4 @@
-module github.com/unusualcodeorg/gomicro/kong
+module github.com/afteracademy/gomicro/kong
 
 go 1.22.5
 

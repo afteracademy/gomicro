@@ -1,9 +1,9 @@
 package startup
 
 import (
-	auth "github.com/unusualcodeorg/gomicro/auth-service/api/auth/model"
-	user "github.com/unusualcodeorg/gomicro/auth-service/api/user/model"
-	"github.com/unusualcodeorg/goserve/arch/mongo"
+	auth "github.com/afteracademy/gomicro/auth-service/api/auth/model"
+	user "github.com/afteracademy/gomicro/auth-service/api/user/model"
+	"github.com/afteracademy/goserve/arch/mongo"
 )
 
 func EnsureDbIndexes(db mongo.Database) {

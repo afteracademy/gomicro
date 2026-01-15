@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/auth/message"
-	"github.com/unusualcodeorg/goserve/arch/mongo"
+	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
+	"github.com/afteracademy/goserve/arch/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	mongod "go.mongodb.org/mongo-driver/mongo"

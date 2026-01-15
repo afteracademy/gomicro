@@ -2,8 +2,8 @@ package user
 
 import (
 	"github.com/stretchr/testify/mock"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/user/dto"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/user/model"
+	"github.com/afteracademy/gomicro/auth-service/api/user/dto"
+	"github.com/afteracademy/gomicro/auth-service/api/user/model"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

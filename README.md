@@ -3,9 +3,9 @@
 ![Banner](.extra/docs/gomicro-banner.png)
 
 ## Create Blogging Platform Microservices
-This project creates a blogging API service using [goserve](https://github.com/unusualcodeorg/goserve) micro framework. In this project Kong is used as the API gateway and NATS for the interservice communication. Each service has its own Mongo database and Redis database (Note: a single mongo and redis server is used for multiple databases).
+This project creates a blogging API service using [goserve](https://github.com/afteracademy/goserve) micro framework. In this project Kong is used as the API gateway and NATS for the interservice communication. Each service has its own Mongo database and Redis database (Note: a single mongo and redis server is used for multiple databases).
 
-This project breaks down the monolithic go blog backend project provided at [goserve](https://github.com/unusualcodeorg/goserve) repository. It uses the [goserve](https://github.com/unusualcodeorg/goserve) REST API framework to build the auth_service, and blog_service.
+This project breaks down the monolithic go blog backend project provided at [goserve](https://github.com/afteracademy/goserve) repository. It uses the [goserve](https://github.com/afteracademy/goserve) REST API framework to build the auth_service, and blog_service.
 
 ### Highlights
 - goserve micro architecture
@@ -16,7 +16,7 @@ This project breaks down the monolithic go blog backend project provided at [gos
 - mongo
 - redis
 
-> More details on the REST part can be found at [goserve](https://github.com/unusualcodeorg/goserve) github repo
+> More details on the REST part can be found at [goserve](https://github.com/afteracademy/goserve) github repo
 
 ### Project Directories
 1. **kong**: kong configuration and plugins
@@ -65,7 +65,7 @@ vscode is the recommended editor - dark theme
 **1. Get the repo**
 
 ```bash
-git clone https://github.com/unusualcodeorg/gomicro.git
+git clone https://github.com/afteracademy/gomicro.git
 ```
 
 **2. Generate RSA Keys**
@@ -105,7 +105,7 @@ You will be able to access the api from http://localhost:8000
 
 ## Documentation
 Information about the framework
-> API framework details can be found at [goserve](https://github.com/unusualcodeorg/goserve) github repo
+> API framework details can be found at [goserve](https://github.com/afteracademy/goserve) github repo
 
 ### NATS
 To communicate among services through nats a message struct is required
@@ -131,7 +131,7 @@ func NewSampleMessage(f1, f2 string) *SampleMessage {
 ```
 
 ### Controller
-- It implements `micro.Controller` from `github.com/unusualcodeorg/goserve/arch/micro`
+- It implements `micro.Controller` from `github.com/afteracademy/goserve/arch/micro`
 - `MountNats` is used to mount the endpoints that other services can call through nats 
 - `MountRoutes` is used to mount the endpoints for http clients
 
@@ -141,9 +141,9 @@ package sample
 import (
   "fmt"
   "github.com/gin-gonic/gin"
-  "github.com/unusualcodeorg/gomicro/microservice2/api/sample/message"
-  "github.com/unusualcodeorg/goserve/arch/micro"
-  "github.com/unusualcodeorg/goserve/arch/network"
+  "github.com/afteracademy/gomicro/microservice2/api/sample/message"
+  "github.com/afteracademy/goserve/arch/micro"
+  "github.com/afteracademy/goserve/arch/network"
 )
 
 type controller struct {
@@ -200,13 +200,13 @@ func (c *controller) getServicePingHandler(ctx *gin.Context) {
 package sample
 
 import (
-  "github.com/unusualcodeorg/gomicro/microservice2/api/sample/dto"
-  "github.com/unusualcodeorg/gomicro/microservice2/api/sample/message"
-  "github.com/unusualcodeorg/gomicro/microservice2/api/sample/model"
-  "github.com/unusualcodeorg/goserve/arch/micro"
-  "github.com/unusualcodeorg/goserve/arch/mongo"
-  "github.com/unusualcodeorg/goserve/arch/network"
-  "github.com/unusualcodeorg/goserve/arch/redis"
+  "github.com/afteracademy/gomicro/microservice2/api/sample/dto"
+  "github.com/afteracademy/gomicro/microservice2/api/sample/message"
+  "github.com/afteracademy/gomicro/microservice2/api/sample/model"
+  "github.com/afteracademy/goserve/arch/micro"
+  "github.com/afteracademy/goserve/arch/mongo"
+  "github.com/afteracademy/goserve/arch/network"
+  "github.com/afteracademy/goserve/arch/redis"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -263,7 +263,7 @@ NatsClient should be created to connect and talk to nats
 ```
 > More details on nats can be found at [nats-io/nats.go](https://github.com/nats-io/nats.go/blob/main/micro/README.md). goserve creates a simple wrapper over this library.
 
-### If you are coming from [goserve](https://github.com/unusualcodeorg/goserve) framework for monolithic go architecture
+### If you are coming from [goserve](https://github.com/afteracademy/goserve) framework for monolithic go architecture
 - `micro.Module[module]` should used for instance creation in place of `network.Module[module]`
 - `micro.NewRouter` should be used in place of `network.NewRouter`
 - `micro.BaseController` should be used in place of `network.BaseController`
@@ -272,10 +272,10 @@ NatsClient should be created to connect and talk to nats
 ## Find this project useful ? :heart:
 * Support it by clicking the :star: button on the upper right of this page. :v:
 
-## More on YouTube channel - Unusual Code
-Subscribe to the YouTube channel `UnusualCode` for understanding the concepts used in this project:
+## More on YouTube channel - AfterAcademy
+Subscribe to the YouTube channel `AfterAcademy` for understanding the concepts used in this project:
 
-[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@unusualcode)
+[![YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@afteracad)
 
 ## Contribution
 Please feel free to fork it and open a PR.

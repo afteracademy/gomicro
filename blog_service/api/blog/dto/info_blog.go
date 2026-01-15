@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/unusualcodeorg/gomicro/blog-service/api/blog/model"
-	"github.com/unusualcodeorg/goserve/utils"
+	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
+	"github.com/afteracademy/goserve/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

@@ -33,7 +33,7 @@ services:
       - redis
 
   mongo:
-    image: mongo:7.0.12
+    image: mongo:mongo:8.0.9
     container_name: mongo
     restart: unless-stopped
     env_file: .env
@@ -49,7 +49,7 @@ services:
       - dbdata:/data/db
 
   redis:
-    image: redis:7.2.5
+    image: redis:8.0.0
     container_name: redis
     restart: unless-stopped
     env_file: .env
@@ -60,7 +60,7 @@ services:
       - cache:/data/cache
 
   nats:
-    image: nats:2.10.17
+    image: nats:2.12.3
     container_name: nats
     restart: unless-stopped
     env_file: .env

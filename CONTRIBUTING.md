@@ -12,7 +12,7 @@ Please note that this project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ### Reporting Bugs
 
-If you find a bug, please help us by providing a detailed bug report. Use the [GitHub Issues](https://github.com/unusualcodeorg/gomicro/issues) section to report bugs. Ensure your bug report includes:
+If you find a bug, please help us by providing a detailed bug report. Use the [GitHub Issues](https://github.com/afteracademy/gomicro/issues) section to report bugs. Ensure your bug report includes:
 
 - A clear and descriptive title.
 - A detailed description of the bug, including steps to reproduce.
@@ -20,14 +20,14 @@ If you find a bug, please help us by providing a detailed bug report. Use the [G
 
 ### Suggesting Enhancements
 
-To suggest enhancements or new features, please use the [GitHub Issues](https://github.com/unusualcodeorg/gomicro/issues) section. Provide a clear and concise description of your suggestion, including any relevant use cases or scenarios.
+To suggest enhancements or new features, please use the [GitHub Issues](https://github.com/afteracademy/gomicro/issues) section. Provide a clear and concise description of your suggestion, including any relevant use cases or scenarios.
 
 ### Pull Requests
 
 1. Fork the repository and create your branch from `main`.
 
     ```bash
-    git clone https://github.com/unusualcodeorg/gomicro.git --recursive
+    git clone https://github.com/afteracademy/gomicro.git --recursive
     git checkout -b your-feature-branch
     ```
 

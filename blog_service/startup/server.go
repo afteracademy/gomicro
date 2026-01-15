@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/unusualcodeorg/gomicro/blog-service/config"
-	"github.com/unusualcodeorg/goserve/arch/micro"
-	"github.com/unusualcodeorg/goserve/arch/mongo"
-	"github.com/unusualcodeorg/goserve/arch/network"
-	"github.com/unusualcodeorg/goserve/arch/redis"
+	"github.com/afteracademy/gomicro/blog-service/config"
+	"github.com/afteracademy/goserve/arch/micro"
+	"github.com/afteracademy/goserve/arch/mongo"
+	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/arch/redis"
 )
 
 type Shutdown = func()

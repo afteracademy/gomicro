@@ -2,11 +2,11 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/auth/message"
-	"github.com/unusualcodeorg/gomicro/auth-service/common"
-	coredto "github.com/unusualcodeorg/goserve/arch/dto"
-	"github.com/unusualcodeorg/goserve/arch/micro"
-	"github.com/unusualcodeorg/goserve/arch/network"
+	"github.com/afteracademy/gomicro/auth-service/api/auth/message"
+	"github.com/afteracademy/gomicro/auth-service/common"
+	coredto "github.com/afteracademy/goserve/arch/dto"
+	"github.com/afteracademy/goserve/arch/micro"
+	"github.com/afteracademy/goserve/arch/network"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

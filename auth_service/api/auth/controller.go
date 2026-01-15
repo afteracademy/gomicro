@@ -2,13 +2,13 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/auth/dto"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/auth/message"
-	"github.com/unusualcodeorg/gomicro/auth-service/api/user"
-	"github.com/unusualcodeorg/gomicro/auth-service/common"
-	"github.com/unusualcodeorg/goserve/arch/micro"
-	"github.com/unusualcodeorg/goserve/arch/network"
-	"github.com/unusualcodeorg/goserve/utils"
+	"github.com/afteracademy/gomicro/auth-service/api/auth/dto"
+	"github.com/afteracademy/gomicro/auth-service/api/auth/message"
+	"github.com/afteracademy/gomicro/auth-service/api/user"
+	"github.com/afteracademy/gomicro/auth-service/common"
+	"github.com/afteracademy/goserve/arch/micro"
+	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/utils"
 )
 
 type controller struct {
