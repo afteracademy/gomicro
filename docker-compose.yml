@@ -33,7 +33,7 @@ services:
       - redis
 
   mongo:
-    image: mongo:mongo:8.0.9
+    image: mongo:8.0.9
     container_name: mongo
     restart: unless-stopped
     env_file: .env

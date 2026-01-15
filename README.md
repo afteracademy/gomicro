@@ -12,7 +12,7 @@ This project breaks down the monolithic go blog backend project provided at [gos
 - kong API gateway
 - nats for microservices communication
 - custom kong go plugin for apikey validation
-- docker and docker-compose
+- docker and docker compose
 - mongo
 - redis
 
@@ -83,13 +83,13 @@ Install Docker and Docker Compose. [Find Instructions Here](https://docs.docker.
 
 > Without Load Balancing
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 OR
 
 > With Load Balancing
 ```bash
-docker-compose -f docker-compose-load-balanced.yml up --build
+docker compose -f docker-compose-load-balanced.yml up --build
 ```
 
 You will be able to access the api from http://localhost:8000
