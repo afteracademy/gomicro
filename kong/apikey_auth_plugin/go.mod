@@ -1,6 +1,6 @@
 module github.com/afteracademy/gomicro/kong
 
-go 1.22.5
+go 1.25.5
 
 require github.com/Kong/go-pdk v0.11.0
 

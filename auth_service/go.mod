@@ -1,6 +1,6 @@
 module github.com/afteracademy/gomicro/auth-service
 
-go 1.22.5
+go 1.25.5
 
 require (
 	github.com/afteracademy/goserve v1.2.0
