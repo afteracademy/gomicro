@@ -5,9 +5,9 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/api/author/dto"
 	"github.com/afteracademy/gomicro/blog-service/common"
-	coredto "github.com/afteracademy/goserve/arch/dto"
-	"github.com/afteracademy/goserve/arch/micro"
-	"github.com/afteracademy/goserve/arch/network"
+	coredto "github.com/afteracademy/goserve/v2/dto"
+	"github.com/afteracademy/goserve/v2/micro"
+	"github.com/afteracademy/goserve/v2/network"
 )
 
 type controller struct {

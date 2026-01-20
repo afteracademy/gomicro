@@ -3,7 +3,7 @@ package startup
 import (
 	auth "github.com/afteracademy/gomicro/auth-service/api/auth/model"
 	user "github.com/afteracademy/gomicro/auth-service/api/user/model"
-	"github.com/afteracademy/goserve/arch/mongo"
+	"github.com/afteracademy/goserve/v2/mongo"
 )
 
 func EnsureDbIndexes(db mongo.Database) {

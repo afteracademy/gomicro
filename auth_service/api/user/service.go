@@ -3,8 +3,8 @@ package user
 import (
 	"github.com/afteracademy/gomicro/auth-service/api/user/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/user/model"
-	"github.com/afteracademy/goserve/arch/mongo"
-	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/afteracademy/goserve/v2/network"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"

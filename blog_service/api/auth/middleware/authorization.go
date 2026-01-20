@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/auth"
 	"github.com/afteracademy/gomicro/blog-service/common"
-	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/v2/network"
 )
 
 type authorizationProvider struct {

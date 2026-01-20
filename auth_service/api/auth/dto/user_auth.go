@@ -1,11 +1,10 @@
 package dto
 
 import (
-	"fmt"
-
-	"github.com/go-playground/validator/v10"
 	"github.com/afteracademy/gomicro/auth-service/api/user/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/user/model"
+	"github.com/afteracademy/goserve/v2/utility"
+	"github.com/go-playground/validator/v10"
 )
 
 type UserAuth struct {
@@ -25,14 +24,5 @@ func (d *UserAuth) GetValue() *UserAuth {
 }
 
 func (d *UserAuth) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	var msgs []string
-	for _, err := range errs {
-		switch err.Tag() {
-		case "required":
-			msgs = append(msgs, fmt.Sprintf("%s is required", err.Field()))
-		default:
-			msgs = append(msgs, fmt.Sprintf("%s is invalid", err.Field()))
-		}
-	}
-	return msgs, nil
+	return utility.FormatValidationErrors(errs), nil
 }

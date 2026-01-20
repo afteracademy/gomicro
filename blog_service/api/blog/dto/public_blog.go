@@ -1,14 +1,14 @@
 package dto
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/api/author/dto"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
 	"github.com/afteracademy/goserve/utils"
+	"github.com/afteracademy/goserve/v2/utility"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -48,24 +48,5 @@ func (d *PublicBlog) GetValue() *PublicBlog {
 }
 
 func (b *PublicBlog) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	var msgs []string
-	for _, err := range errs {
-		switch err.Tag() {
-		case "required":
-			msgs = append(msgs, fmt.Sprintf("%s is required", err.Field()))
-		case "min":
-			msgs = append(msgs, fmt.Sprintf("%s must be at least %s characters", err.Field(), err.Param()))
-		case "max":
-			msgs = append(msgs, fmt.Sprintf("%s must be at most %s characters", err.Field(), err.Param()))
-		case "url":
-			msgs = append(msgs, fmt.Sprintf("%s must be a valid URL", err.Field()))
-		case "uri":
-			msgs = append(msgs, fmt.Sprintf("%s must be a valid URI", err.Field()))
-		case "uppercase":
-			msgs = append(msgs, fmt.Sprintf("%s must be uppercase", err.Field()))
-		default:
-			msgs = append(msgs, fmt.Sprintf("%s is invalid", err.Field()))
-		}
-	}
-	return msgs, nil
+	return utility.FormatValidationErrors(errs), nil
 }

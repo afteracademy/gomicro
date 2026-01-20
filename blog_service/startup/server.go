@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/config"
-	"github.com/afteracademy/goserve/arch/micro"
-	"github.com/afteracademy/goserve/arch/mongo"
-	"github.com/afteracademy/goserve/arch/network"
-	"github.com/afteracademy/goserve/arch/redis"
+	"github.com/afteracademy/goserve/v2/micro"
+	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/redis"
 )
 
 type Shutdown = func()

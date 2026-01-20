@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/afteracademy/gomicro/auth-service/api/auth/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
-	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/v2/network"
 )
 
 func TestAuthController_SignupBadRequest(t *testing.T) {

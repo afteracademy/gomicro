@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/afteracademy/gomicro/auth-service/config"
-	"github.com/afteracademy/goserve/arch/micro"
+	"github.com/afteracademy/goserve/v2/micro"
 )
 
 type Teardown = func()

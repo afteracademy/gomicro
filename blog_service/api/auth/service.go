@@ -2,8 +2,8 @@ package auth
 
 import (
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
-	"github.com/afteracademy/goserve/arch/micro"
-	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/v2/micro"
+	"github.com/afteracademy/goserve/v2/network"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

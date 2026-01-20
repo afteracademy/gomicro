@@ -10,11 +10,11 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/blogs"
 	"github.com/afteracademy/gomicro/blog-service/api/editor"
 	"github.com/afteracademy/gomicro/blog-service/config"
-	"github.com/afteracademy/goserve/arch/micro"
-	coreMW "github.com/afteracademy/goserve/arch/middleware"
-	"github.com/afteracademy/goserve/arch/mongo"
-	"github.com/afteracademy/goserve/arch/network"
-	"github.com/afteracademy/goserve/arch/redis"
+	"github.com/afteracademy/goserve/v2/micro"
+	coreMW "github.com/afteracademy/goserve/v2/middleware"
+	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/redis"
 )
 
 type Module micro.Module[module]

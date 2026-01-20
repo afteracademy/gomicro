@@ -3,9 +3,9 @@ package dto
 import (
 	"fmt"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
 	"github.com/afteracademy/goserve/utils"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

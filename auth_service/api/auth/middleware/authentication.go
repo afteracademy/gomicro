@@ -5,7 +5,7 @@ import (
 	"github.com/afteracademy/gomicro/auth-service/api/auth"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
 	"github.com/afteracademy/gomicro/auth-service/common"
-	"github.com/afteracademy/goserve/arch/network"
+	"github.com/afteracademy/goserve/v2/network"
 )
 
 type authenticationProvider struct {

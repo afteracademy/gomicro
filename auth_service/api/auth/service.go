@@ -4,15 +4,16 @@ import (
 	"crypto/rsa"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/afteracademy/gomicro/auth-service/api/auth/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/auth/model"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
 	userModel "github.com/afteracademy/gomicro/auth-service/api/user/model"
 	"github.com/afteracademy/gomicro/auth-service/config"
-	"github.com/afteracademy/goserve/arch/mongo"
-	"github.com/afteracademy/goserve/arch/network"
-	"github.com/afteracademy/goserve/utils"
+	"github.com/afteracademy/gomicro/auth-service/utils"
+	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/utility"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -272,11 +273,11 @@ func (s *service) RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken stri
 }
 
 func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
-	primaryKey, err := utils.GenerateRandomString(32)
+	primaryKey, err := utility.GenerateRandomString(32)
 	if err != nil {
 		return "", "", err
 	}
-	secondaryKey, err := utils.GenerateRandomString(32)
+	secondaryKey, err := utility.GenerateRandomString(32)
 	if err != nil {
 		return "", "", err
 	}
@@ -400,7 +401,7 @@ func (s *service) ValidateClaims(claims *jwt.RegisteredClaims) bool {
 		return false
 	}
 
-	return utils.IsValidObjectID(claims.Subject)
+	return mongo.IsValidObjectID(claims.Subject)
 }
 
 func (s *service) FindApiKey(key string) (*model.ApiKey, error) {

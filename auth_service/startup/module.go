@@ -7,11 +7,11 @@ import (
 	authMW "github.com/afteracademy/gomicro/auth-service/api/auth/middleware"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
 	"github.com/afteracademy/gomicro/auth-service/config"
-	"github.com/afteracademy/goserve/arch/micro"
-	coreMW "github.com/afteracademy/goserve/arch/middleware"
-	"github.com/afteracademy/goserve/arch/mongo"
-	"github.com/afteracademy/goserve/arch/network"
-	"github.com/afteracademy/goserve/arch/redis"
+	"github.com/afteracademy/goserve/v2/micro"
+	coreMW "github.com/afteracademy/goserve/v2/middleware"
+	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/redis"
 )
 
 type Module micro.Module[module]

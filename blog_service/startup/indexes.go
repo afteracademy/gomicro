@@ -2,7 +2,7 @@ package startup
 
 import (
 	blog "github.com/afteracademy/gomicro/blog-service/api/blog/model"
-	"github.com/afteracademy/goserve/arch/mongo"
+	"github.com/afteracademy/goserve/v2/mongo"
 )
 
 func EnsureDbIndexes(db mongo.Database) {

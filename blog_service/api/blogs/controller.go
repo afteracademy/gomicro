@@ -3,9 +3,9 @@ package blogs
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/blogs/dto"
-	coredto "github.com/afteracademy/goserve/arch/dto"
-	"github.com/afteracademy/goserve/arch/micro"
-	"github.com/afteracademy/goserve/arch/network"
+	coredto "github.com/afteracademy/goserve/v2/dto"
+	"github.com/afteracademy/goserve/v2/micro"
+	"github.com/afteracademy/goserve/v2/network"
 )
 
 type controller struct {

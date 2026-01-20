@@ -131,7 +131,7 @@ func NewSampleMessage(f1, f2 string) *SampleMessage {
 ```
 
 ### Controller
-- It implements `micro.Controller` from `github.com/afteracademy/goserve/arch/micro`
+- It implements `micro.Controller` from `github.com/afteracademy/goserve/v2/micro`
 - `MountNats` is used to mount the endpoints that other services can call through nats 
 - `MountRoutes` is used to mount the endpoints for http clients
 
@@ -142,8 +142,8 @@ import (
   "fmt"
   "github.com/gin-gonic/gin"
   "github.com/afteracademy/gomicro/microservice2/api/sample/message"
-  "github.com/afteracademy/goserve/arch/micro"
-  "github.com/afteracademy/goserve/arch/network"
+  "github.com/afteracademy/goserve/v2/micro"
+  "github.com/afteracademy/goserve/v2/network"
 )
 
 type controller struct {
@@ -203,10 +203,10 @@ import (
   "github.com/afteracademy/gomicro/microservice2/api/sample/dto"
   "github.com/afteracademy/gomicro/microservice2/api/sample/message"
   "github.com/afteracademy/gomicro/microservice2/api/sample/model"
-  "github.com/afteracademy/goserve/arch/micro"
-  "github.com/afteracademy/goserve/arch/mongo"
-  "github.com/afteracademy/goserve/arch/network"
-  "github.com/afteracademy/goserve/arch/redis"
+  "github.com/afteracademy/goserve/v2/micro"
+  "github.com/afteracademy/goserve/v2/mongo"
+  "github.com/afteracademy/goserve/v2/network"
+  "github.com/afteracademy/goserve/v2/redis"
   "go.mongodb.org/mongo-driver/bson"
   "go.mongodb.org/mongo-driver/bson/primitive"
 )

@@ -1,8 +1,7 @@
 package dto
 
 import (
-	"fmt"
-
+	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -23,14 +22,5 @@ func (d *UserTokens) GetValue() *UserTokens {
 }
 
 func (d *UserTokens) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	var msgs []string
-	for _, err := range errs {
-		switch err.Tag() {
-		case "required":
-			msgs = append(msgs, fmt.Sprintf("%s is required", err.Field()))
-		default:
-			msgs = append(msgs, fmt.Sprintf("%s is invalid", err.Field()))
-		}
-	}
-	return msgs, nil
+	return utility.FormatValidationErrors(errs), nil
 }
