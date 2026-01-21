@@ -1,21 +1,19 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/auth-service/api/auth"
 	"github.com/afteracademy/gomicro/auth-service/common"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 )
 
 type authorizationProvider struct {
-	network.ResponseSender
 	common.ContextPayload
 	authService auth.Service
 }
 
 func NewAuthorizationProvider(authService auth.Service) network.AuthorizationProvider {
 	return &authorizationProvider{
-		ResponseSender: network.NewResponseSender(),
 		ContextPayload: common.NewContextPayload(),
 		authService:    authService,
 	}
@@ -27,7 +25,7 @@ func (m *authorizationProvider) Middleware(roleNames ...string) gin.HandlerFunc 
 
 		err := m.authService.Authorize(user, roleNames...)
 		if err != nil {
-			m.Send(ctx).MixedError(err)
+			network.SendMixedError(ctx, err)
 			return
 		}
 

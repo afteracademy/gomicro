@@ -12,7 +12,7 @@ import (
 )
 
 type controller struct {
-	micro.BaseController
+	micro.Controller
 	common.ContextPayload
 	service     Service
 	userService user.Service
@@ -25,7 +25,7 @@ func NewController(
 	userService user.Service,
 ) micro.Controller {
 	return &controller{
-		BaseController: micro.NewBaseController("/", authProvider, authorizeProvider),
+		Controller: micro.NewController("/", authProvider, authorizeProvider),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 		userService:    userService,
@@ -40,39 +40,39 @@ func (c *controller) MountNats(group micro.NatsGroup) {
 func (c *controller) authenticationHandler(req micro.NatsRequest) {
 	text, err := micro.ParseMsg[message.Text](req.Data())
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
 	user, _, err := c.service.Authenticate(text.Value)
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
-	c.SendNats(req).Message(message.NewUser(user))
+	micro.SendNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) authorizationHandler(req micro.NatsRequest) {
 	userRole, err := micro.ParseMsg[message.UserRole](req.Data())
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
 	user, err := c.userService.FindUserById(userRole.User.ID)
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
 	err = c.service.Authorize(user, userRole.Roles...)
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
-	c.SendNats(req).Message(message.NewUser(user))
+	micro.SendNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {
@@ -86,49 +86,49 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 func (c *controller) verifyApikeyHandler(ctx *gin.Context) {
 	key := ctx.GetHeader(network.ApiKeyHeader)
 	if len(key) == 0 {
-		c.Send(ctx).UnauthorizedError("permission denied: missing x-api-key header", nil)
+		network.SendUnauthorizedError(ctx, "permission denied: missing x-api-key header", nil)
 		return
 	}
 
 	_, err := c.service.FindApiKey(key)
 	if err != nil {
-		c.Send(ctx).ForbiddenError("permission denied: invalid x-api-key", err)
+		network.SendForbiddenError(ctx, "permission denied: invalid x-api-key", err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("success")
+	network.SendSuccessMsgResponse(ctx, "success")
 }
 
 func (c *controller) signUpBasicHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptySignUpBasic())
+	body, err := network.ReqBody[dto.SignUpBasic](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	data, err := c.service.SignUpBasic(body)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", data)
+	network.SendSuccessDataResponse(ctx, "success", data)
 }
 
 func (c *controller) signInBasicHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptySignInBasic())
+	body, err := network.ReqBody[dto.SignInBasic](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	dto, err := c.service.SignInBasic(body)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", dto)
+	network.SendSuccessDataResponse(ctx, "success", dto)
 }
 
 func (c *controller) signOutBasic(ctx *gin.Context) {
@@ -136,17 +136,17 @@ func (c *controller) signOutBasic(ctx *gin.Context) {
 
 	err := c.service.SignOut(keystore)
 	if err != nil {
-		c.Send(ctx).InternalServerError("something went wrong", err)
+		network.SendInternalServerError(ctx, "something went wrong", err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("signout success")
+	network.SendSuccessMsgResponse(ctx, "signout success")
 }
 
 func (c *controller) tokenRefreshHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptyTokenRefresh())
+	body, err := network.ReqBody[dto.TokenRefresh](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -155,9 +155,9 @@ func (c *controller) tokenRefreshHandler(ctx *gin.Context) {
 
 	dto, err := c.service.RenewToken(body, accessToken)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", dto)
+	network.SendSuccessDataResponse(ctx, "success", dto)
 }

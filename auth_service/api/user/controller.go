@@ -1,17 +1,17 @@
 package user
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/auth-service/api/auth/message"
 	"github.com/afteracademy/gomicro/auth-service/common"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type controller struct {
-	micro.BaseController
+	micro.Controller
 	common.ContextPayload
 	service Service
 }
@@ -22,7 +22,7 @@ func NewController(
 	service Service,
 ) micro.Controller {
 	return &controller{
-		BaseController: micro.NewBaseController("/profile", authProvider, authorizeProvider),
+		Controller:     micro.NewController("/profile", authProvider, authorizeProvider),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 	}
@@ -35,23 +35,23 @@ func (c *controller) MountNats(group micro.NatsGroup) {
 func (c *controller) userHandler(req micro.NatsRequest) {
 	text, err := micro.ParseMsg[message.Text](req.Data())
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
 	userId, err := primitive.ObjectIDFromHex(text.Value)
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
 	user, err := c.service.FindUserPublicProfile(userId)
 	if err != nil {
-		c.SendNats(req).Error(err)
+		micro.SendNatsError(req, err)
 		return
 	}
 
-	c.SendNats(req).Message(message.NewUser(user))
+	micro.SendNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {
@@ -61,19 +61,19 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getPublicProfileHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	data, err := c.service.GetUserPublicProfile(mongoId.ID)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", data)
+	network.SendSuccessDataResponse(ctx, "success", data)
 }
 
 func (c *controller) getPrivateProfileHandler(ctx *gin.Context) {
@@ -81,9 +81,9 @@ func (c *controller) getPrivateProfileHandler(ctx *gin.Context) {
 
 	data, err := c.service.GetUserPrivateProfile(user)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", data)
+	network.SendSuccessDataResponse(ctx, "success", data)
 }

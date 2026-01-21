@@ -1,16 +1,16 @@
 package editor
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/common"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 )
 
 type controller struct {
-	micro.BaseController
+	micro.Controller
 	common.ContextPayload
 	service Service
 }
@@ -21,7 +21,7 @@ func NewController(
 	service Service,
 ) micro.Controller {
 	return &controller{
-		BaseController: micro.NewBaseController("/editor", authMFunc, authorizeMFunc),
+		Controller:     micro.NewController("/editor", authMFunc, authorizeMFunc),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 	}
@@ -39,25 +39,25 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blog, err := c.service.GetBlogById(mongoId.ID)
 	if err != nil {
-		c.Send(ctx).NotFoundError(mongoId.Id+" not found", err)
+		network.SendNotFoundError(ctx, mongoId.ID.Hex()+" not found", err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", blog)
 }
 
 func (c *controller) publishBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -65,17 +65,17 @@ func (c *controller) publishBlogHandler(ctx *gin.Context) {
 
 	err = c.service.BlogPublication(mongoId.ID, user, true)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("blog published successfully")
+	network.SendSuccessMsgResponse(ctx, "blog published successfully")
 }
 
 func (c *controller) unpublishBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -83,41 +83,41 @@ func (c *controller) unpublishBlogHandler(ctx *gin.Context) {
 
 	err = c.service.BlogPublication(mongoId.ID, user, false)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("blog unpublished successfully")
+	network.SendSuccessMsgResponse(ctx, "blog unpublished successfully")
 }
 
 func (c *controller) getSubmittedBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
-	blog, err := c.service.GetPaginatedSubmitted(pagination)
+	blogs, err := c.service.GetPaginatedSubmitted(pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getPublishedBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetPaginatedPublished(pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }

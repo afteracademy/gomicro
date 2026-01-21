@@ -28,7 +28,6 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	blogQueryBuilder mongo.QueryBuilder[model.Blog]
 	publicBlogCache  redis.Cache[dto.PublicBlog]
 	authService      auth.Service
@@ -36,7 +35,6 @@ type service struct {
 
 func NewService(db mongo.Database, store redis.Store, authService auth.Service) Service {
 	return &service{
-		BaseService:      network.NewBaseService(),
 		blogQueryBuilder: mongo.NewQueryBuilder[model.Blog](db, model.CollectionName),
 		publicBlogCache:  redis.NewCache[dto.PublicBlog](store),
 		authService:      authService,

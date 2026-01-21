@@ -13,7 +13,7 @@ type Config struct {
 	ApiKeyVerificationURLs []string `json:"verification_urls"`
 }
 
-func New() interface{} {
+func New() any {
 	return &Config{}
 }
 

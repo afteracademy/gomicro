@@ -1,15 +1,15 @@
 package blogs
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/blogs/dto"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 )
 
 type controller struct {
-	micro.BaseController
+	micro.Controller
 	service Service
 }
 
@@ -19,8 +19,8 @@ func NewController(
 	service Service,
 ) micro.Controller {
 	return &controller{
-		BaseController: micro.NewBaseController("/list", authMFunc, authorizeMFunc),
-		service:        service,
+		Controller: micro.NewController("/list", authMFunc, authorizeMFunc),
+		service:    service,
 	}
 }
 
@@ -33,62 +33,62 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getLatestBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetPaginatedLatestBlogs(pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getTaggedBlogsHandler(ctx *gin.Context) {
-	tag, err := network.ReqParams(ctx, dto.EmptyTag())
+	tag, err := network.ReqParams[dto.Tag](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetPaginatedTaggedBlogs(tag.Tag, pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getSimilarBlogsHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetSimilarBlogsDtoCache(mongoId.ID)
 	if err == nil {
-		c.Send(ctx).SuccessDataResponse("success", blogs)
+		network.SendSuccessDataResponse(ctx, "success", &blogs)
 		return
 	}
 
 	blogs, err = c.service.GetSimilarBlogs(mongoId.ID)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 	c.service.SetSimilarBlogsDtoCache(mongoId.ID, blogs)
 }

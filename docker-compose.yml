@@ -1,8 +1,8 @@
+name: "gomicro_mongo_stack"
 services:
   kong:
     build:
       context: ./kong
-    container_name: kong
     user: root
     restart: unless-stopped
     ports:
@@ -17,7 +17,6 @@ services:
   auth:
     build:
       context: ./auth_service
-    container_name: auth
     restart: unless-stopped
     depends_on:
       - mongo
@@ -26,7 +25,6 @@ services:
   blog:
     build:
       context: ./blog_service
-    container_name: blog
     restart: unless-stopped
     depends_on:
       - mongo
@@ -34,7 +32,6 @@ services:
 
   mongo:
     image: mongo:8.0.9
-    container_name: mongo
     restart: unless-stopped
     env_file: .env
     environment:
@@ -49,8 +46,7 @@ services:
       - dbdata:/data/db
 
   redis:
-    image: redis:8.0.0
-    container_name: redis
+    image: redis:8.4.0
     restart: unless-stopped
     env_file: .env
     ports:
@@ -61,7 +57,6 @@ services:
 
   nats:
     image: nats:2.12.3
-    container_name: nats
     restart: unless-stopped
     env_file: .env
     ports:

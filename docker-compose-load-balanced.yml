@@ -1,9 +1,9 @@
+name: "gomicro_load_balanced_mongo_stack"
 services:
   kong:
     build:
       context: ./kong
       dockerfile: ./Dockerfile-load-balanced
-    container_name: kong
     user: root
     restart: unless-stopped
     ports:
@@ -20,7 +20,6 @@ services:
   auth1:
     build:
       context: ./auth_service
-    container_name: auth1
     restart: unless-stopped
     depends_on:
       - mongo
@@ -28,7 +27,6 @@ services:
   auth2:
     build:
       context: ./auth_service
-    container_name: auth2
     restart: unless-stopped
     depends_on:
       - mongo
@@ -37,7 +35,6 @@ services:
   blog1:
     build:
       context: ./blog_service
-    container_name: blog1
     restart: unless-stopped
     depends_on:
       - mongo
@@ -45,7 +42,6 @@ services:
   blog2:
     build:
       context: ./blog_service
-    container_name: blog2
     restart: unless-stopped
     depends_on:
       - mongo
@@ -53,7 +49,6 @@ services:
 
   mongo:
     image: mongo:8.0.9
-    container_name: mongo
     restart: unless-stopped
     env_file: .env
     environment:
@@ -68,8 +63,7 @@ services:
       - dbdata:/data/db
 
   redis:
-    image: redis:8.0.0
-    container_name: redis
+    image: redis:8.4.0
     restart: unless-stopped
     env_file: .env
     ports:
@@ -80,7 +74,6 @@ services:
 
   nats:
     image: nats:2.12.3
-    container_name: nats
     restart: unless-stopped
     env_file: .env
     ports:

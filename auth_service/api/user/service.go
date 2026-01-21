@@ -24,14 +24,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	userQueryBuilder mongo.QueryBuilder[model.User]
 	roleQueryBuilder mongo.QueryBuilder[model.Role]
 }
 
 func NewService(db mongo.Database) Service {
 	return &service{
-		BaseService:      network.NewBaseService(),
 		userQueryBuilder: mongo.NewQueryBuilder[model.User](db, model.UserCollectionName),
 		roleQueryBuilder: mongo.NewQueryBuilder[model.Role](db, model.RolesCollectionName),
 	}

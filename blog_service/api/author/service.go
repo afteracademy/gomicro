@@ -30,14 +30,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	blogQueryBuilder mongo.QueryBuilder[model.Blog]
 	blogService      blog.Service
 }
 
 func NewService(db mongo.Database, blogService blog.Service) Service {
 	return &service{
-		BaseService:      network.NewBaseService(),
 		blogQueryBuilder: mongo.NewQueryBuilder[model.Blog](db, model.CollectionName),
 		blogService:      blogService,
 	}

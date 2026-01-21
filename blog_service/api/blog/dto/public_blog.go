@@ -7,8 +7,6 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/author/dto"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
 	"github.com/afteracademy/goserve/utils"
-	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -41,12 +39,4 @@ func NewPublicBlog(blog *model.Blog, author *message.User) (*PublicBlog, error) 
 	}
 
 	return b, err
-}
-
-func (d *PublicBlog) GetValue() *PublicBlog {
-	return d
-}
-
-func (b *PublicBlog) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

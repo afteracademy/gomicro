@@ -25,14 +25,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	blogQueryBuilder mongo.QueryBuilder[model.Blog]
 	itemBlogCache    redis.Cache[dto.ItemBlog]
 }
 
 func NewService(db mongo.Database, store redis.Store) Service {
 	return &service{
-		BaseService:      network.NewBaseService(),
 		blogQueryBuilder: mongo.NewQueryBuilder[model.Blog](db, model.CollectionName),
 		itemBlogCache:    redis.NewCache[dto.ItemBlog](store),
 	}

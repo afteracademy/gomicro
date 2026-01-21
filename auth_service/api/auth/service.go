@@ -40,7 +40,6 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	keystoreQueryBuilder mongo.QueryBuilder[model.Keystore]
 	apikeyQueryBuilder   mongo.QueryBuilder[model.ApiKey]
 	userService          user.Service
@@ -78,7 +77,6 @@ func NewService(
 	}
 
 	return &service{
-		BaseService:          network.NewBaseService(),
 		userService:          userService,
 		keystoreQueryBuilder: mongo.NewQueryBuilder[model.Keystore](db, model.KeystoreCollectionName),
 		apikeyQueryBuilder:   mongo.NewQueryBuilder[model.ApiKey](db, model.ApiKeyCollectionName),

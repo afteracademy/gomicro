@@ -8,14 +8,12 @@ import (
 )
 
 type authenticationProvider struct {
-	network.ResponseSender
 	common.ContextPayload
 	authService auth.Service
 }
 
 func NewAuthenticationProvider(authService auth.Service) network.AuthenticationProvider {
 	return &authenticationProvider{
-		ResponseSender: network.NewResponseSender(),
 		ContextPayload: common.NewContextPayload(),
 		authService:    authService,
 	}
@@ -27,7 +25,7 @@ func (m *authenticationProvider) Middleware() gin.HandlerFunc {
 
 		user, err := m.authService.Authenticate(authHeader)
 		if err != nil {
-			m.Send(ctx).UnauthorizedError(err.Error(), err)
+			network.SendUnauthorizedError(ctx, err.Error(), err)
 			return
 		}
 

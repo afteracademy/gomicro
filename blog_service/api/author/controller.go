@@ -1,17 +1,17 @@
 package author
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/api/author/dto"
 	"github.com/afteracademy/gomicro/blog-service/common"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 )
 
 type controller struct {
-	micro.BaseController
+	micro.Controller
 	common.ContextPayload
 	service Service
 }
@@ -22,7 +22,7 @@ func NewController(
 	service Service,
 ) micro.Controller {
 	return &controller{
-		BaseController: micro.NewBaseController("/author", authMFunc, authorizeMFunc),
+		Controller:     micro.NewController("/author", authMFunc, authorizeMFunc),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 	}
@@ -44,9 +44,9 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) postBlogHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptyCreateBlog())
+	body, err := network.ReqBody[dto.CreateBlog](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -54,17 +54,17 @@ func (c *controller) postBlogHandler(ctx *gin.Context) {
 
 	b, err := c.service.CreateBlog(body, user)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("blog created successfully", b)
+	network.SendSuccessDataResponse(ctx, "blog created successfully", b)
 }
 
 func (c *controller) updateBlogHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptyUpdateBlog())
+	body, err := network.ReqBody[dto.UpdateBlog](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -72,17 +72,17 @@ func (c *controller) updateBlogHandler(ctx *gin.Context) {
 
 	b, err := c.service.UpdateBlog(body, user)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("blog updated successfully", b)
+	network.SendSuccessDataResponse(ctx, "blog updated successfully", b)
 }
 
 func (c *controller) getBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -90,17 +90,17 @@ func (c *controller) getBlogHandler(ctx *gin.Context) {
 
 	blog, err := c.service.GetBlogById(mongoId.ID, user)
 	if err != nil {
-		c.Send(ctx).NotFoundError(mongoId.Id+" not found", err)
+		network.SendNotFoundError(ctx, mongoId.Id+" not found", err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", blog)
 }
 
 func (c *controller) submitBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -108,17 +108,17 @@ func (c *controller) submitBlogHandler(ctx *gin.Context) {
 
 	err = c.service.BlogSubmission(mongoId.ID, user, true)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("blog submitted successfully")
+	network.SendSuccessMsgResponse(ctx, "blog submitted successfully")
 }
 
 func (c *controller) withdrawBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -126,17 +126,17 @@ func (c *controller) withdrawBlogHandler(ctx *gin.Context) {
 
 	err = c.service.BlogSubmission(mongoId.ID, user, false)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("blog withdrawn successfully")
+	network.SendSuccessMsgResponse(ctx, "blog withdrawn successfully")
 }
 
 func (c *controller) deleteBlogHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -144,53 +144,53 @@ func (c *controller) deleteBlogHandler(ctx *gin.Context) {
 
 	err = c.service.DeactivateBlog(mongoId.ID, user)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("blog deleted successfully")
+	network.SendSuccessMsgResponse(ctx, "blog deleted successfully")
 }
 
 func (c *controller) getDraftsBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	user := c.MustGetUser(ctx)
 
-	blog, err := c.service.GetPaginatedDrafts(user, pagination)
+	blogs, err := c.service.GetPaginatedDrafts(user, pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getSubmittedBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	user := c.MustGetUser(ctx)
 
-	blog, err := c.service.GetPaginatedSubmitted(user, pagination)
+	blogs, err := c.service.GetPaginatedSubmitted(user, pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getPublishedBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -198,9 +198,9 @@ func (c *controller) getPublishedBlogsHandler(ctx *gin.Context) {
 
 	blogs, err := c.service.GetPaginatedPublished(user, pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }

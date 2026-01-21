@@ -9,7 +9,6 @@ import (
 )
 
 type authenticationProvider struct {
-	network.ResponseSender
 	common.ContextPayload
 	authService auth.Service
 	userService user.Service
@@ -17,7 +16,6 @@ type authenticationProvider struct {
 
 func NewAuthenticationProvider(authService auth.Service, userService user.Service) network.AuthenticationProvider {
 	return &authenticationProvider{
-		ResponseSender: network.NewResponseSender(),
 		ContextPayload: common.NewContextPayload(),
 		authService:    authService,
 		userService:    userService,
@@ -30,7 +28,7 @@ func (m *authenticationProvider) Middleware() gin.HandlerFunc {
 
 		user, keystore, err := m.authService.Authenticate(authHeader)
 		if err != nil {
-			m.Send(ctx).MixedError(err)
+			network.SendMixedError(ctx, err)
 			return
 		}
 

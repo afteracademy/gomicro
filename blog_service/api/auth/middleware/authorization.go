@@ -8,14 +8,12 @@ import (
 )
 
 type authorizationProvider struct {
-	network.ResponseSender
 	common.ContextPayload
 	authService auth.Service
 }
 
 func NewAuthorizationProvider(authService auth.Service) network.AuthorizationProvider {
 	return &authorizationProvider{
-		ResponseSender: network.NewResponseSender(),
 		ContextPayload: common.NewContextPayload(),
 		authService:    authService,
 	}
@@ -27,7 +25,7 @@ func (m *authorizationProvider) Middleware(roleNames ...string) gin.HandlerFunc 
 
 		err := m.authService.Authorize(user, roleNames...)
 		if err != nil {
-			m.Send(ctx).ForbiddenError(err.Error(), err)
+			network.SendForbiddenError(ctx, err.Error(), err)
 			return
 		}
 
