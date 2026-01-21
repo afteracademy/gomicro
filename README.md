@@ -9,11 +9,12 @@ This project breaks down the monolithic go blog backend project provided at [gos
 
 ### Highlights
 - goserve micro architecture
+- auth service in postgress
+- blog service in mongo
 - kong API gateway
 - nats for microservices communication
 - custom kong go plugin for apikey validation
 - docker and docker compose
-- mongo
 - redis
 
 > More details on the REST part can be found at [goserve](https://github.com/afteracademy/goserve) github repo
@@ -24,7 +25,8 @@ This project breaks down the monolithic go blog backend project provided at [gos
 3. **blog_service**: blog APIs code 
 
 **Helper/Optional Directories**
-1. **.setup**: mongo script for initialization inside docker, other web assets and documents
+1. **auth_service/.setup**: postgress script for initialization inside docker
+1. **blog_service/.setup**: mongo script for initialization inside docker
 2. **.tools**: RSA key generator, and .env copier
 3. **.vscode**: editor config and service debug launch settings
 
