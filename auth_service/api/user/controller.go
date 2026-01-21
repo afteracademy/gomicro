@@ -7,7 +7,7 @@ import (
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/network"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 type controller struct {
@@ -39,13 +39,13 @@ func (c *controller) userHandler(req micro.NatsRequest) {
 		return
 	}
 
-	userId, err := primitive.ObjectIDFromHex(text.Value)
+	userId, err := uuid.Parse(text.Value)
 	if err != nil {
 		micro.RespondNatsError(req, err)
 		return
 	}
 
-	user, err := c.service.FindUserPublicProfile(userId)
+	user, err := c.service.FetchUserById(userId)
 	if err != nil {
 		micro.RespondNatsError(req, err)
 		return
@@ -61,13 +61,13 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getPublicProfileHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams[coredto.MongoId](ctx)
+	uuidParam, err := network.ReqParams[coredto.UUID](ctx)
 	if err != nil {
 		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
-	data, err := c.service.GetUserPublicProfile(mongoId.ID)
+	data, err := c.service.FetchUserPublicProfile(uuidParam.ID)
 	if err != nil {
 		network.SendMixedError(ctx, err)
 		return
@@ -79,7 +79,7 @@ func (c *controller) getPublicProfileHandler(ctx *gin.Context) {
 func (c *controller) getPrivateProfileHandler(ctx *gin.Context) {
 	user := c.MustGetUser(ctx)
 
-	data, err := c.service.GetUserPrivateProfile(user)
+	data, err := c.service.FetchUserPrivateProfile(user)
 	if err != nil {
 		network.SendMixedError(ctx, err)
 		return

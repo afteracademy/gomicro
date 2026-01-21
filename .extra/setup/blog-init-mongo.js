@@ -7,6 +7,5 @@ function seed(dbName, user, password) {
   });
 }
 
-seed("blog-prod-db", "blog-prod-db-user", "changeit");
-seed("blog-dev-db", "blog-dev-db-user", "changeit");
+seed("blog-db", "blog-db-user", "changeit");
 seed("blog-test-db", "blog-test-db-user", "changeit");

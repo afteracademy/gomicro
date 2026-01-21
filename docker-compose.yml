@@ -1,4 +1,4 @@
-name: "gomicro_mongo_stack"
+name: "gomicro"
 services:
   kong:
     build:
@@ -13,58 +13,157 @@ services:
     depends_on:
       - auth
       - blog
+    networks:
+      - gomicro-network
 
   auth:
     build:
       context: ./auth_service
+      dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - ./auth_service/.env
     depends_on:
-      - mongo
-      - redis
+      postgres:
+        condition: service_healthy
+      redis-auth:
+        condition: service_started
+      nats:
+        condition: service_started
+    networks:
+      - gomicro-network
+    # Internal service - no external ports exposed (Kong routes traffic)
 
   blog:
     build:
       context: ./blog_service
+      dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - ./blog_service/.env
     depends_on:
-      - mongo
-      - redis
+      mongo:
+        condition: service_started
+      redis-blog:
+        condition: service_started
+      nats:
+        condition: service_started
+    networks:
+      - gomicro-network
+    # Internal service - no external ports exposed (Kong routes traffic)
 
+  # Auth Service Database (PostgreSQL)
+  postgres:
+    image: postgres:18.1
+    restart: unless-stopped
+    env_file: ./auth_service/.env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_USER_PWD}
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./auth_service/.extra/setup/auth-init-pg-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-db.sql:ro
+      - ./auth_service/.extra/setup/auth-init-pg-test-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-test-db.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gomicro-network
+
+  # Blog Service Database (MongoDB)
   mongo:
     image: mongo:8.0.9
     restart: unless-stopped
-    env_file: .env
+    env_file: ./blog_service/.env
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${DB_ADMIN}
       - MONGO_INITDB_ROOT_PASSWORD=${DB_ADMIN_PWD}
     ports:
-      - '${DB_PORT}:27017'
+      - '27017:27017'
     command: mongod --bind_ip_all
     volumes:
-      - ./.extra/setup/blog-init-mongo.js:/docker-entrypoint-initdb.d/blog-init-mongo.js:ro
-      - ./.extra/setup/auth-init-mongo.js:/docker-entrypoint-initdb.d/auth-init-mongo.js:ro
-      - dbdata:/data/db
+      - ./blog_service/.extra/setup/blog-init-mongo.js:/docker-entrypoint-initdb.d/blog-init-mongo.js:ro
+      - mongo-data:/data/db
+    networks:
+      - gomicro-network
 
-  redis:
+  # Redis for Auth Service
+  redis-auth:
     image: redis:8.4.0
     restart: unless-stopped
-    env_file: .env
+    env_file: ./auth_service/.env
     ports:
-      - '${REDIS_PORT}:6379'
-    command: redis-server --bind localhost --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+      - '6379:6379'
+    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     volumes:
-      - cache:/data/cache
+      - redis-auth-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gomicro-network
 
+  # Redis for Blog Service
+  redis-blog:
+    image: redis:8.4.0
+    restart: unless-stopped
+    env_file: ./blog_service/.env
+    ports:
+      - '6380:6379'
+    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-blog-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gomicro-network
+
+  # Message broker for inter-service communication
   nats:
     image: nats:2.12.3
     restart: unless-stopped
     env_file: .env
     ports:
-      - "${NATS_CLIENT_PORT}:4222"
-      - "${NATS_MANAGEMENT_PORT}:8222"
+      - "${NATS_CLIENT_PORT:-4222}:4222"
+      - "${NATS_MANAGEMENT_PORT:-8222}:8222"
+    networks:
+      - gomicro-network
+
+  # Database migration for auth service
+  migrate-auth:
+    image: migrate/migrate
+    env_file: ./auth_service/.env
+    volumes:
+      - ./auth_service/migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      [
+        "-path", "/migrations",
+        "-database", "postgres://$${DB_USER}:$${DB_USER_PWD}@postgres:5432/$${DB_NAME}?sslmode=disable",
+        "up"
+      ]
+    networks:
+      - gomicro-network
+    restart: on-failure
+
+networks:
+  gomicro-network:
+    driver: bridge
 
 volumes:
-  dbdata:
-  cache:
-    driver: local
- 
+  postgres-data:
+  mongo-data:
+  redis-auth-data:
+  redis-blog-data:

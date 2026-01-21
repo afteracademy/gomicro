@@ -1,125 +1,527 @@
 package user
 
 import (
+	"context"
+
 	"github.com/afteracademy/gomicro/auth-service/api/user/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/user/model"
-	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
-	GetUserPrivateProfile(user *model.User) (*dto.InfoPrivateUser, error)
-	GetUserPublicProfile(userId primitive.ObjectID) (*dto.InfoPublicUser, error)
-	FindRoleByCode(code model.RoleCode) (*model.Role, error)
-	FindRoles(roleIds []primitive.ObjectID) ([]*model.Role, error)
-	FindUserById(id primitive.ObjectID) (*model.User, error)
-	FindUserByEmail(email string) (*model.User, error)
-	CreateUser(user *model.User) (*model.User, error)
-	FindUserPrivateProfile(user *model.User) (*model.User, error)
-	FindUserPublicProfile(userId primitive.ObjectID) (*model.User, error)
-	DeleteUserByEmail(email string) (bool, error)
+	FetchUserPrivateProfile(user *model.User) (*dto.UserPrivate, error)
+	FetchUserPublicProfile(userId uuid.UUID) (*dto.UserPublic, error)
+	FetchUserById(id uuid.UUID) (*model.User, error)
+	IsEmailExists(email string) (bool, error)
+	FetchUserByEmail(email string) (*model.User, error)
+	RemoveUserByEmail(email string) (bool, error)
+	FetchRoleByCode(code model.RoleCode) (*model.Role, error)
+	CreateUser(
+		email string, password string, name string, profilePicURL *string, roles []*model.Role,
+	) (*model.User, error)
+
+	/*--------only for tests----------*/
+	CreateRole(code model.RoleCode) (*model.Role, error)
+	DeleteRole(role *model.Role) (bool, error)
+	/*--------------------------------*/
 }
 
 type service struct {
-	userQueryBuilder mongo.QueryBuilder[model.User]
-	roleQueryBuilder mongo.QueryBuilder[model.Role]
+	db *pgxpool.Pool
 }
 
-func NewService(db mongo.Database) Service {
+func NewService(db *pgxpool.Pool) Service {
 	return &service{
-		userQueryBuilder: mongo.NewQueryBuilder[model.User](db, model.UserCollectionName),
-		roleQueryBuilder: mongo.NewQueryBuilder[model.Role](db, model.RolesCollectionName),
+		db: db,
 	}
 }
 
-func (s *service) GetUserPrivateProfile(user *model.User) (*dto.InfoPrivateUser, error) {
-	return dto.NewInfoPrivateUser(user), nil
+func (s *service) FetchUserPrivateProfile(user *model.User) (*dto.UserPrivate, error) {
+	// leverage the role from the auth context
+	return dto.NewUserPrivate(user), nil
 }
 
-func (s *service) GetUserPublicProfile(userId primitive.ObjectID) (*dto.InfoPublicUser, error) {
-	user, err := s.FindUserPublicProfile(userId)
+func (s *service) FetchUserPublicProfile(userId uuid.UUID) (*dto.UserPublic, error) {
+	user, err := s.FindUserPublicProfile(context.Background(), userId)
 	if err != nil {
 		return nil, network.NewNotFoundError("user does not exists", err)
 	}
-	return dto.NewInfoPublicUser(user), nil
+	return dto.NewUserPublic(user), nil
 }
 
-func (s *service) FindRoleByCode(code model.RoleCode) (*model.Role, error) {
-	filter := bson.M{"code": code, "status": true}
-	return s.roleQueryBuilder.SingleQuery().FindOne(filter, nil)
+func (s *service) FetchUserById(id uuid.UUID) (*model.User, error) {
+	return s.FindUserById(context.Background(), id)
 }
 
-func (s *service) FindRoles(roleIds []primitive.ObjectID) ([]*model.Role, error) {
-	filter := bson.M{"_id": bson.M{"$in": roleIds}}
-	return s.roleQueryBuilder.SingleQuery().FindAll(filter, nil)
+func (s *service) FetchUserByEmail(email string) (*model.User, error) {
+	return s.FindUserByEmail(context.Background(), email)
 }
 
-func (s *service) FindUserById(id primitive.ObjectID) (*model.User, error) {
-	userFilter := bson.M{"_id": id, "status": true}
-	proj := bson.D{{Key: "password", Value: 0}}
-	opts := options.FindOne().SetProjection(proj)
-	user, err := s.userQueryBuilder.SingleQuery().FindOne(userFilter, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	roles, err := s.FindRoles(user.Roles)
-	if err != nil {
-		return nil, err
-	}
-
-	user.RoleDocs = roles
-	return user, nil
+func (s *service) RemoveUserByEmail(email string) (bool, error) {
+	return s.DeleteUserByEmail(context.Background(), email)
 }
 
-func (s *service) FindUserByEmail(email string) (*model.User, error) {
-	filter := bson.M{"email": email, "status": true}
-	user, err := s.userQueryBuilder.SingleQuery().FindOne(filter, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	roles, err := s.FindRoles(user.Roles)
-	if err != nil {
-		return nil, err
-	}
-
-	user.RoleDocs = roles
-	return user, nil
+func (s *service) FetchRoleByCode(code model.RoleCode) (*model.Role, error) {
+	return s.FindRoleByCode(context.Background(), code)
 }
 
-func (s *service) CreateUser(user *model.User) (*model.User, error) {
-	id, err := s.userQueryBuilder.SingleQuery().InsertOne(user)
-	if err != nil {
-		return nil, err
-	}
-	user.ID = *id
-	return user, nil
-}
+func (s *service) IsEmailExists(
+	email string,
+) (bool, error) {
+	ctx := context.Background()
 
-func (s *service) FindUserPrivateProfile(user *model.User) (*model.User, error) {
-	filter := bson.M{"_id": user.ID, "status": true}
-	projection := bson.D{{Key: "password", Value: 0}}
-	opts := options.FindOne().SetProjection(projection)
-	return s.userQueryBuilder.SingleQuery().FindOne(filter, opts)
-}
+	query := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM users
+			WHERE email = $1
+		)
+	`
 
-func (s *service) FindUserPublicProfile(userId primitive.ObjectID) (*model.User, error) {
-	filter := bson.M{"_id": userId, "status": true}
-	projection := bson.D{{Key: "name", Value: 1}, {Key: "profilePicUrl", Value: 1}}
-	opts := options.FindOne().SetProjection(projection)
-	return s.userQueryBuilder.SingleQuery().FindOne(filter, opts)
-}
-
-func (s *service) DeleteUserByEmail(email string) (bool, error) {
-	filter := bson.M{"email": email}
-	result, err := s.userQueryBuilder.SingleQuery().DeleteOne(filter)
+	var exists bool
+	err := s.db.QueryRow(ctx, query, email).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
-	return result.DeletedCount > 0, nil
+
+	return exists, nil
+}
+
+func (s *service) FindRoleByCode(
+	ctx context.Context,
+	code model.RoleCode,
+) (*model.Role, error) {
+
+	query := `
+		SELECT
+			id,
+			code,
+			status,
+			created_at,
+			updated_at
+		FROM roles
+		WHERE code = $1
+		  AND status = TRUE
+	`
+
+	var role model.Role
+
+	err := s.db.QueryRow(ctx, query, code).
+		Scan(
+			&role.ID,
+			&role.Code,
+			&role.Status,
+			&role.CreatedAt,
+			&role.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &role, nil
+}
+
+func (s *service) FindRoles(
+	ctx context.Context,
+	roleIDs []uuid.UUID,
+) ([]*model.Role, error) {
+
+	if len(roleIDs) == 0 {
+		return []*model.Role{}, nil
+	}
+
+	query := `
+		SELECT
+			id,
+			code,
+			status,
+			created_at,
+			updated_at
+		FROM roles
+		WHERE id = ANY($1)
+		  AND status = TRUE
+	`
+
+	rows, err := s.db.Query(ctx, query, roleIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []*model.Role
+
+	for rows.Next() {
+		var role model.Role
+		if err := rows.Scan(
+			&role.ID,
+			&role.Code,
+			&role.Status,
+			&role.CreatedAt,
+			&role.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		roles = append(roles, &role)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (s *service) FindUserById(
+	ctx context.Context,
+	id uuid.UUID,
+) (*model.User, error) {
+
+	userQuery := `
+		SELECT
+			id,
+			email,
+			name,
+			profile_pic_url,
+			verified,
+			status,
+			created_at,
+			updated_at
+		FROM users
+		WHERE id = $1
+		  AND status = TRUE
+	`
+
+	var user model.User
+
+	err := s.db.QueryRow(ctx, userQuery, id).
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Name,
+			&user.ProfilePicURL,
+			&user.Verified,
+			&user.Status,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	roles, err := s.FindUserRoles(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	user.Roles = roles
+
+	return &user, nil
+}
+
+func (s *service) FindUserByEmail(
+	ctx context.Context,
+	email string,
+) (*model.User, error) {
+
+	userQuery := `
+		SELECT
+			id,
+			email,
+			password,
+			name,
+			profile_pic_url,
+			verified,
+			status,
+			created_at,
+			updated_at
+		FROM users
+		WHERE email = $1
+		  AND status = TRUE
+	`
+
+	var user model.User
+
+	err := s.db.QueryRow(ctx, userQuery, email).
+		Scan(
+			&user.ID,
+			&user.Email,
+			&user.Password,
+			&user.Name,
+			&user.ProfilePicURL,
+			&user.Verified,
+			&user.Status,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	roles, err := s.FindUserRoles(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	user.Roles = roles
+
+	return &user, nil
+}
+
+func (s *service) FindUserRoles(ctx context.Context, user model.User) ([]*model.Role, error) {
+	roleQuery := `
+		SELECT
+			r.id,
+			r.code,
+			r.status,
+			r.created_at,
+			r.updated_at
+		FROM roles r
+		INNER JOIN user_roles ur
+			ON ur.role_id = r.id
+		WHERE ur.user_id = $1
+		  AND r.status = TRUE
+	`
+	rows, err := s.db.Query(ctx, roleQuery, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var roles []*model.Role
+	for rows.Next() {
+		var role model.Role
+		if err := rows.Scan(
+			&role.ID,
+			&role.Code,
+			&role.Status,
+			&role.CreatedAt,
+			&role.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		roles = append(roles, &role)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+func (s *service) CreateUser(
+	email string, password string, name string, profilePicURL *string, roles []*model.Role,
+) (*model.User, error) {
+	ctx := context.Background()
+
+	var user model.User
+
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	query := `
+		INSERT INTO users (
+			email,
+			password,
+			name,
+			profile_pic_url,
+			verified
+		)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING
+			id,
+			email,
+			password,
+			name,
+			profile_pic_url,
+			verified,
+			status,
+			created_at,
+			updated_at
+	`
+
+	err = tx.QueryRow(
+		ctx,
+		query,
+		email,
+		password,
+		name,
+		profilePicURL,
+		false,
+	).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.Name,
+		&user.ProfilePicURL,
+		&user.Verified,
+		&user.Status,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	const roleInsert = `
+		INSERT INTO user_roles (user_id, role_id)
+		VALUES ($1, $2)
+	`
+
+	for _, role := range roles {
+		_, err := tx.Exec(ctx, roleInsert, user.ID, role.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	user.Roles = roles
+
+	return &user, nil
+}
+
+func (s *service) FindUserPrivateProfile(
+	ctx context.Context,
+	user *model.User,
+) (*model.User, error) {
+
+	query := `
+		SELECT
+			id,
+			email,
+			name,
+			profile_pic_url,
+			verified,
+			status,
+			created_at,
+			updated_at
+		FROM users
+		WHERE id = $1
+		  AND status = TRUE
+	`
+
+	var result model.User
+
+	err := s.db.QueryRow(ctx, query, user.ID).
+		Scan(
+			&result.ID,
+			&result.Email,
+			&result.Name,
+			&result.ProfilePicURL,
+			&result.Verified,
+			&result.Status,
+			&result.CreatedAt,
+			&result.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (s *service) FindUserPublicProfile(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*model.User, error) {
+
+	query := `
+		SELECT
+			id,
+			name,
+			profile_pic_url
+		FROM users
+		WHERE id = $1
+		  AND status = TRUE
+	`
+
+	var user model.User
+
+	err := s.db.QueryRow(ctx, query, userID).
+		Scan(&user.ID, &user.Name, &user.ProfilePicURL)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (s *service) DeleteUserByEmail(ctx context.Context, email string) (bool, error) {
+	query := `
+		DELETE FROM users
+		WHERE email = $1
+	`
+
+	tag, err := s.db.Exec(ctx, query, email)
+	if err != nil {
+		return false, err
+	}
+
+	return tag.RowsAffected() > 0, nil
+}
+
+func (s *service) CreateRole(code model.RoleCode) (*model.Role, error) {
+	ctx := context.Background()
+
+	var role model.Role
+
+	query := `
+		INSERT INTO roles (
+			code
+		)
+		VALUES ($1)
+		RETURNING
+			id,
+			code,
+			status,
+			created_at,
+			updated_at
+	`
+
+	err := s.db.QueryRow(
+		ctx,
+		query,
+		code,
+	).Scan(
+		&role.ID,
+		&role.Code,
+		&role.Status,
+		&role.CreatedAt,
+		&role.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &role, nil
+}
+
+func (s *service) DeleteRole(role *model.Role) (bool, error) {
+	ctx := context.Background()
+
+	query := `
+		DELETE FROM roles
+		WHERE id = $1
+	`
+
+	tag, err := s.db.Exec(ctx, query, role.ID)
+	if err != nil {
+		return false, err
+	}
+
+	return tag.RowsAffected() > 0, nil
 }

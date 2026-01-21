@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/auth-service/config"
 	"github.com/afteracademy/goserve/v2/micro"
-	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/afteracademy/goserve/v2/redis"
 )
 
@@ -24,7 +23,7 @@ func Server() {
 func create(env *config.Env) (micro.Router, Module, Shutdown) {
 	context := context.Background()
 
-	dbConfig := mongo.DbConfig{
+	dbConfig := postgres.DbConfig{
 		User:        env.DBUser,
 		Pwd:         env.DBUserPwd,
 		Host:        env.DBHost,
@@ -35,12 +34,8 @@ func create(env *config.Env) (micro.Router, Module, Shutdown) {
 		Timeout:     time.Duration(env.DBQueryTimeout) * time.Second,
 	}
 
-	db := mongo.NewDatabase(context, dbConfig)
+	db := postgres.NewDatabase(context, dbConfig)
 	db.Connect()
-
-	if env.GoMode != gin.TestMode {
-		EnsureDbIndexes(db)
-	}
 
 	redisConfig := redis.Config{
 		Host: env.RedisHost,

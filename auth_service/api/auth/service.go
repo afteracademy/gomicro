@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/rsa"
 	"time"
 
@@ -10,11 +11,11 @@ import (
 	userModel "github.com/afteracademy/gomicro/auth-service/api/user/model"
 	"github.com/afteracademy/gomicro/auth-service/config"
 	"github.com/afteracademy/gomicro/auth-service/utils"
-	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
 	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,26 +24,26 @@ type Service interface {
 	Authorize(user *userModel.User, roles ...string) error
 	SignUpBasic(signUpDto *dto.SignUpBasic) (*dto.UserAuth, error)
 	SignInBasic(signInDto *dto.SignInBasic) (*dto.UserAuth, error)
-	RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken string) (*dto.UserTokens, error)
+	RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken string) (*dto.Tokens, error)
 	SignOut(keystore *model.Keystore) error
 	IsEmailRegisted(email string) bool
 	GenerateToken(user *userModel.User) (string, string, error)
-	CreateKeystore(client *userModel.User, primaryKey string, secondaryKey string) (*model.Keystore, error)
-	FindKeystore(client *userModel.User, primaryKey string) (*model.Keystore, error)
-	FindRefreshKeystore(client *userModel.User, pKey string, sKey string) (*model.Keystore, error)
+	FetchKeystore(client *userModel.User, primaryKey string) (*model.Keystore, error)
 	VerifyToken(tokenStr string) (*jwt.RegisteredClaims, error)
 	DecodeToken(tokenStr string) (*jwt.RegisteredClaims, error)
 	SignToken(claims jwt.RegisteredClaims) (string, error)
 	ValidateClaims(claims *jwt.RegisteredClaims) bool
-	FindApiKey(key string) (*model.ApiKey, error)
+	FetchApiKey(key string) (*model.ApiKey, error)
+
+	/*--------only for tests----------*/
 	CreateApiKey(key string, version int, permissions []model.Permission, comments []string) (*model.ApiKey, error)
 	DeleteApiKey(apikey *model.ApiKey) (bool, error)
+	/*--------------------------------*/
 }
 
 type service struct {
-	keystoreQueryBuilder mongo.QueryBuilder[model.Keystore]
-	apikeyQueryBuilder   mongo.QueryBuilder[model.ApiKey]
-	userService          user.Service
+	db          *pgxpool.Pool
+	userService user.Service
 	// token
 	rsaPrivateKey        *rsa.PrivateKey
 	rsaPublicKey         *rsa.PublicKey
@@ -53,7 +54,7 @@ type service struct {
 }
 
 func NewService(
-	db mongo.Database,
+	db *pgxpool.Pool,
 	env *config.Env,
 	userService user.Service,
 ) Service {
@@ -77,9 +78,8 @@ func NewService(
 	}
 
 	return &service{
-		userService:          userService,
-		keystoreQueryBuilder: mongo.NewQueryBuilder[model.Keystore](db, model.KeystoreCollectionName),
-		apikeyQueryBuilder:   mongo.NewQueryBuilder[model.ApiKey](db, model.ApiKeyCollectionName),
+		userService: userService,
+		db:          db,
 		// token key
 		rsaPrivateKey: rsaPrivateKey,
 		rsaPublicKey:  rsaPublicKey,
@@ -111,17 +111,17 @@ func (s *service) Authenticate(authToken string) (*userModel.User, *model.Keysto
 		return nil, nil, network.NewUnauthorizedError("permission denied: invalid claims", nil)
 	}
 
-	userId, err := mongo.NewObjectID(claims.Subject)
+	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
 		return nil, nil, network.NewUnauthorizedError("permission denied: invalid claims subject", nil)
 	}
 
-	user, err := s.userService.FindUserById(userId)
+	user, err := s.userService.FetchUserById(userId)
 	if err != nil {
 		return nil, nil, network.NewUnauthorizedError("permission denied: claims subject does not exists", err)
 	}
 
-	keystore, err := s.FindKeystore(user, claims.ID)
+	keystore, err := s.FetchKeystore(user, claims.ID)
 	if err != nil || keystore == nil {
 		return nil, nil, network.NewUnauthorizedError("permission denied: invalid access token", err)
 	}
@@ -136,7 +136,7 @@ func (s *service) Authorize(user *userModel.User, roleNames ...string) error {
 
 	hasRole := false
 	for _, code := range roleNames {
-		for _, role := range user.RoleDocs {
+		for _, role := range user.Roles {
 			if role.Code == userModel.RoleCode(code) {
 				hasRole = true
 				break
@@ -159,7 +159,7 @@ func (s *service) SignUpBasic(signUpDto *dto.SignUpBasic) (*dto.UserAuth, error)
 		return nil, network.NewBadRequestError("user already registered", nil)
 	}
 
-	role, err := s.userService.FindRoleByCode(userModel.RoleCodeLearner)
+	role, err := s.userService.FetchRoleByCode(userModel.RoleCodeLearner)
 	if err != nil {
 		return nil, err
 	}
@@ -171,12 +171,7 @@ func (s *service) SignUpBasic(signUpDto *dto.SignUpBasic) (*dto.UserAuth, error)
 		return nil, err
 	}
 
-	user, err := userModel.NewUser(signUpDto.Email, string(hashed), signUpDto.Name, signUpDto.ProfilePicUrl, roles)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err = s.userService.CreateUser(user)
+	user, err := s.userService.CreateUser(signUpDto.Email, string(hashed), signUpDto.Name, signUpDto.ProfilePicUrl, roles)
 	if err != nil {
 		return nil, err
 	}
@@ -186,12 +181,12 @@ func (s *service) SignUpBasic(signUpDto *dto.SignUpBasic) (*dto.UserAuth, error)
 		return nil, err
 	}
 
-	tokens := dto.NewUserTokens(accessToken, refreshToken)
+	tokens := dto.NewTokens(accessToken, refreshToken)
 	return dto.NewUserAuth(user, tokens), nil
 }
 
 func (s *service) SignInBasic(signInDto *dto.SignInBasic) (*dto.UserAuth, error) {
-	user, err := s.userService.FindUserByEmail(signInDto.Email)
+	user, err := s.userService.FetchUserByEmail(signInDto.Email)
 	if err != nil {
 		return nil, network.NewNotFoundError("user not registerd", err)
 	}
@@ -206,22 +201,30 @@ func (s *service) SignInBasic(signInDto *dto.SignInBasic) (*dto.UserAuth, error)
 		return nil, err
 	}
 
-	tokens := dto.NewUserTokens(accessToken, refreshToken)
+	tokens := dto.NewTokens(accessToken, refreshToken)
 	return dto.NewUserAuth(user, tokens), nil
 }
 
 func (s *service) SignOut(keystore *model.Keystore) error {
-	filter := bson.M{"_id": keystore.ID}
-	_, err := s.keystoreQueryBuilder.SingleQuery().DeleteOne(filter)
+	ctx := context.Background()
+
+	query := `
+		DELETE FROM keystore
+		WHERE id = $1
+	`
+
+	_, err := s.db.Exec(ctx, query, keystore.ID)
 	return err
 }
 
 func (s *service) IsEmailRegisted(email string) bool {
-	user, _ := s.userService.FindUserByEmail(email)
-	return user != nil
+	exists, _ := s.userService.IsEmailExists(email)
+	return exists
 }
 
-func (s *service) RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken string) (*dto.UserTokens, error) {
+func (s *service) RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken string) (*dto.Tokens, error) {
+	ctx := context.Background()
+
 	accessClaims, err := s.DecodeToken(accessToken)
 	if err != nil {
 		return nil, err
@@ -246,13 +249,13 @@ func (s *service) RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken stri
 		return nil, network.NewUnauthorizedError("permission denied: access and refresh claims mismatch", nil)
 	}
 
-	userId, _ := mongo.NewObjectID(refreshClaims.Subject)
-	user, err := s.userService.FindUserById(userId)
+	userId, _ := uuid.Parse(refreshClaims.Subject)
+	user, err := s.userService.FetchUserById(userId)
 	if err != nil {
 		return nil, network.NewUnauthorizedError("permission denied: invalid refresh claims subject", nil)
 	}
 
-	keystore, err := s.FindRefreshKeystore(user, accessClaims.ID, refreshClaims.ID)
+	keystore, err := s.FindRefreshKeystore(ctx, user, accessClaims.ID, refreshClaims.ID)
 	if err != nil {
 		return nil, network.NewUnauthorizedError("permission denied: claims ids", nil)
 	}
@@ -267,10 +270,11 @@ func (s *service) RenewToken(tokenRefreshDto *dto.TokenRefresh, accessToken stri
 		return nil, err
 	}
 
-	return dto.NewUserTokens(accessToken, refreshToken), nil
+	return dto.NewTokens(accessToken, refreshToken), nil
 }
 
 func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
+	ctx := context.Background()
 	primaryKey, err := utility.GenerateRandomString(32)
 	if err != nil {
 		return "", "", err
@@ -280,7 +284,7 @@ func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
 		return "", "", err
 	}
 
-	_, err = s.CreateKeystore(user, primaryKey, secondaryKey)
+	_, err = s.CreateKeystore(ctx, user, primaryKey, secondaryKey)
 	if err != nil {
 		return "", "", err
 	}
@@ -289,7 +293,7 @@ func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
 
 	accessTokenClaims := jwt.RegisteredClaims{
 		Issuer:    s.tokenIssuer,
-		Subject:   user.ID.Hex(),
+		Subject:   user.ID.String(),
 		Audience:  []string{s.tokenAudience},
 		IssuedAt:  now,
 		NotBefore: now,
@@ -299,7 +303,7 @@ func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
 
 	refreshTokenClaims := jwt.RegisteredClaims{
 		Issuer:    s.tokenIssuer,
-		Subject:   user.ID.Hex(),
+		Subject:   user.ID.String(),
 		Audience:  []string{s.tokenAudience},
 		IssuedAt:  now,
 		NotBefore: now,
@@ -320,29 +324,141 @@ func (s *service) GenerateToken(user *userModel.User) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
-func (s *service) CreateKeystore(client *userModel.User, primaryKey string, secondaryKey string) (*model.Keystore, error) {
-	doc, err := model.NewKeystore(client.ID, primaryKey, secondaryKey)
+func (s *service) GenerateKeystore(
+	client *userModel.User,
+	primaryKey string,
+	secondaryKey string,
+) (*model.Keystore, error) {
+	return s.CreateKeystore(context.Background(), client, primaryKey, secondaryKey)
+}
+
+func (s *service) CreateKeystore(
+	ctx context.Context,
+	client *userModel.User,
+	primaryKey string,
+	secondaryKey string,
+) (*model.Keystore, error) {
+
+	var ks = model.Keystore{}
+
+	query := `
+		INSERT INTO keystore (
+			user_id,
+			p_key,
+			s_key
+		)
+		VALUES ($1, $2, $3)
+		RETURNING
+			id,
+			created_at,
+			updated_at
+	`
+
+	err := s.db.QueryRow(
+		ctx,
+		query,
+		client.ID,
+		primaryKey,
+		secondaryKey,
+	).Scan(
+		&ks.ID,
+		&ks.CreatedAt,
+		&ks.UpdatedAt,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	id, err := s.keystoreQueryBuilder.SingleQuery().InsertOne(doc)
+	return &ks, nil
+}
+
+func (s *service) FetchKeystore(
+	client *userModel.User,
+	primaryKey string,
+) (*model.Keystore, error) {
+	ctx := context.Background()
+	query := `
+		SELECT
+			id,
+			user_id,
+			p_key,
+			s_key,
+			status,
+			created_at,
+			updated_at
+		FROM keystore
+		WHERE user_id = $1
+		  AND p_key = $2
+		  AND status = TRUE
+	`
+
+	var ks model.Keystore
+
+	err := s.db.QueryRow(ctx, query, client.ID, primaryKey).
+		Scan(
+			&ks.ID,
+			&ks.UserID,
+			&ks.PrimaryKey,
+			&ks.SecondaryKey,
+			&ks.Status,
+			&ks.CreatedAt,
+			&ks.UpdatedAt,
+		)
+
 	if err != nil {
 		return nil, err
 	}
 
-	doc.ID = *id
-	return doc, nil
+	return &ks, nil
 }
 
-func (s *service) FindKeystore(client *userModel.User, primaryKey string) (*model.Keystore, error) {
-	filter := bson.M{"client": client.ID, "pKey": primaryKey, "status": true}
-	return s.keystoreQueryBuilder.SingleQuery().FindOne(filter, nil)
-}
+func (s *service) FindRefreshKeystore(
+	ctx context.Context,
+	client *userModel.User,
+	primaryKey string,
+	secondaryKey string,
+) (*model.Keystore, error) {
 
-func (s *service) FindRefreshKeystore(client *userModel.User, primaryKey string, secondaryKey string) (*model.Keystore, error) {
-	filter := bson.M{"client": client.ID, "pKey": primaryKey, "sKey": secondaryKey, "status": true}
-	return s.keystoreQueryBuilder.SingleQuery().FindOne(filter, nil)
+	query := `
+		SELECT
+			id,
+			user_id,
+			p_key,
+			s_key,
+			status,
+			created_at,
+			updated_at
+		FROM keystore
+		WHERE user_id = $1
+		  AND p_key = $2
+		  AND s_key = $3
+		  AND status = TRUE
+	`
+
+	var ks model.Keystore
+
+	err := s.db.QueryRow(
+		ctx,
+		query,
+		client.ID,
+		primaryKey,
+		secondaryKey,
+	).Scan(
+		&ks.ID,
+		&ks.UserID,
+		&ks.PrimaryKey,
+		&ks.SecondaryKey,
+		&ks.Status,
+		&ks.CreatedAt,
+		&ks.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &ks, nil
 }
 
 func (s *service) SignToken(claims jwt.RegisteredClaims) (string, error) {
@@ -399,37 +515,116 @@ func (s *service) ValidateClaims(claims *jwt.RegisteredClaims) bool {
 		return false
 	}
 
-	return mongo.IsValidObjectID(claims.Subject)
+	err := uuid.Validate(claims.Subject)
+	return err == nil
 }
 
-func (s *service) FindApiKey(key string) (*model.ApiKey, error) {
-	filter := bson.M{"key": key, "status": true}
+func (s *service) FetchApiKey(
+	key string,
+) (*model.ApiKey, error) {
+	ctx := context.Background()
+	query := `
+		SELECT
+			id,
+			key,
+			permissions,
+			comments,
+			version,
+			status,
+			created_at,
+			updated_at
+		FROM api_keys
+		WHERE key = $1
+		  AND status = TRUE
+	`
 
-	apikey, err := s.apikeyQueryBuilder.SingleQuery().FindOne(filter, nil)
+	var apiKey model.ApiKey
+
+	err := s.db.QueryRow(ctx, query, key).
+		Scan(
+			&apiKey.ID,
+			&apiKey.Key,
+			&apiKey.Permissions,
+			&apiKey.Comments,
+			&apiKey.Version,
+			&apiKey.Status,
+			&apiKey.CreatedAt,
+			&apiKey.UpdatedAt,
+		)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return apikey, nil
+	return &apiKey, nil
 }
 
-func (s *service) CreateApiKey(key string, version int, permissions []model.Permission, comments []string) (*model.ApiKey, error) {
-	doc := model.NewApiKey(key, version, permissions, comments)
+func (s *service) CreateApiKey(
+	key string,
+	version int,
+	permissions []model.Permission,
+	comments []string,
+) (*model.ApiKey, error) {
+	ctx := context.Background()
+	var apiKey model.ApiKey
 
-	id, err := s.apikeyQueryBuilder.SingleQuery().InsertOne(doc)
+	query := `
+		INSERT INTO api_keys (
+			key,
+			permissions,
+			comments,
+			version
+		)
+		VALUES ($1, $2, $3, $4)
+		RETURNING
+			id,
+			key,
+			permissions,
+			comments,
+			version,
+			status,
+			created_at,
+			updated_at
+	`
+
+	err := s.db.QueryRow(
+		ctx,
+		query,
+		key,
+		permissions,
+		comments,
+		version,
+	).Scan(
+		&apiKey.ID,
+		&apiKey.Key,
+		&apiKey.Permissions,
+		&apiKey.Comments,
+		&apiKey.Version,
+		&apiKey.Status,
+		&apiKey.CreatedAt,
+		&apiKey.UpdatedAt,
+	)
+
 	if err != nil {
 		return nil, err
 	}
 
-	doc.ID = *id
-	return doc, nil
+	return &apiKey, nil
 }
 
-func (s *service) DeleteApiKey(apikey *model.ApiKey) (bool, error) {
-	filter := bson.M{"_id": apikey.ID}
-	result, err := s.apikeyQueryBuilder.SingleQuery().DeleteOne(filter)
+func (s *service) DeleteApiKey(
+	apiKey *model.ApiKey,
+) (bool, error) {
+	ctx := context.Background()
+	query := `
+		DELETE FROM api_keys
+		WHERE id = $1
+	`
+
+	tag, err := s.db.Exec(ctx, query, apiKey.ID)
 	if err != nil {
 		return false, err
 	}
-	return result.DeletedCount > 0, nil
+
+	return tag.RowsAffected() > 0, nil
 }

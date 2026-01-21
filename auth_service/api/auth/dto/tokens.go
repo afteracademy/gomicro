@@ -1,12 +1,12 @@
 package dto
 
-type UserTokens struct {
+type Tokens struct {
 	AccessToken  string `json:"accessToken" binding:"required" validate:"required"`
 	RefreshToken string `json:"refreshToken" binding:"required" validate:"required"`
 }
 
-func NewUserTokens(access string, refresh string) *UserTokens {
-	return &UserTokens{
+func NewTokens(access string, refresh string) *Tokens {
+	return &Tokens{
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}

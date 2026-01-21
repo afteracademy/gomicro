@@ -9,8 +9,8 @@ import (
 	"github.com/afteracademy/gomicro/auth-service/config"
 	"github.com/afteracademy/goserve/v2/micro"
 	coreMW "github.com/afteracademy/goserve/v2/middleware"
-	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/afteracademy/goserve/v2/redis"
 )
 
@@ -19,7 +19,7 @@ type Module micro.Module[module]
 type module struct {
 	Context     context.Context
 	Env         *config.Env
-	DB          mongo.Database
+	DB          postgres.Database
 	Store       redis.Store
 	NatsClient  micro.NatsClient
 	UserService user.Service
@@ -52,9 +52,15 @@ func (m *module) AuthorizationProvider() network.AuthorizationProvider {
 	return authMW.NewAuthorizationProvider(m.AuthService)
 }
 
-func NewModule(context context.Context, env *config.Env, db mongo.Database, store redis.Store, natsClient micro.NatsClient) Module {
-	userService := user.NewService(db)
-	authService := auth.NewService(db, env, userService)
+func NewModule(
+	context context.Context,
+	env *config.Env,
+	db postgres.Database,
+	store redis.Store,
+	natsClient micro.NatsClient,
+) Module {
+	userService := user.NewService(db.Pool())
+	authService := auth.NewService(db.Pool(), env, userService)
 	return &module{
 		Context:     context,
 		Env:         env,

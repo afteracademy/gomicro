@@ -60,7 +60,7 @@ func (c *controller) authorizationHandler(req micro.NatsRequest) {
 		return
 	}
 
-	user, err := c.userService.FindUserById(userRole.User.ID)
+	user, err := c.userService.FetchUserById(userRole.User.ID)
 	if err != nil {
 		micro.RespondNatsError(req, err)
 		return
@@ -90,7 +90,7 @@ func (c *controller) verifyApikeyHandler(ctx *gin.Context) {
 		return
 	}
 
-	_, err := c.service.FindApiKey(key)
+	_, err := c.service.FetchApiKey(key)
 	if err != nil {
 		network.SendForbiddenError(ctx, "permission denied: invalid x-api-key", err)
 		return
