@@ -207,27 +207,29 @@ import (
   "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const NATS_TOPIC_PING = "microservice1.sample.ping"
+
 type Service interface {
   FindSample(id primitive.ObjectID) (*model.Sample, error)
   GetSampleMessage(data *message.SampleMessage) (*message.SampleMessage, error)
 }
 
 type service struct {
+	natsClient micro.NatsClient
   sampleQueryBuilder   mongo.QueryBuilder[model.Sample]
   infoSampleCache      redis.Cache[dto.InfoSample]
-  sampleRequestBuilder micro.RequestBuilder[message.SampleMessage]
 }
 
 func NewService(db mongo.Database, store redis.Store, natsClient micro.NatsClient) Service {
   return &service{
+		natsClient: natsClient,
     sampleQueryBuilder:   mongo.NewQueryBuilder[model.Sample](db, model.CollectionName),
     infoSampleCache:      redis.NewCache[dto.InfoSample](store),
-    sampleRequestBuilder: micro.NewRequestBuilder[message.SampleMessage](natsClient, "microservice1.sample.ping"),
   }
 }
 
 func (s *service) GetSampleMessage(data *message.SampleMessage) (*message.SampleMessage, error) {
-  return s.sampleRequestBuilder.Request(data).Nats()
+		return micro.RequestNats[message.SampleMessage, message.SampleMessage](s.natsClient, NATS_TOPIC_PING, data)
 }
 
 func (s *service) FindSample(id primitive.ObjectID) (*model.Sample, error) {
