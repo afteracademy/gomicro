@@ -22,9 +22,9 @@ type PrivateBlog struct {
 	ImgURL      *string            `json:"imgUrl,omitempty" validate:"omitempty,uri,max=200"`
 	Score       *float64           `json:"score,omitempty" validate:"omitempty,min=0,max=1"`
 	Tags        *[]string          `json:"tags,omitempty" validate:"omitempty,dive,uppercase"`
-	Submitted   bool               `json:"submitted" validate:"required"`
-	Drafted     bool               `json:"drafted" validate:"required"`
-	Published   bool               `json:"published" validate:"required"`
+	Submitted   bool               `json:"submitted" validate:"-"`
+	Drafted     bool               `json:"drafted" validate:"-"`
+	Published   bool               `json:"published" validate:"-"`
 	PublishedAt *time.Time         `json:"publishedAt,omitempty"`
 	CreatedAt   time.Time          `json:"createdAt" validate:"required"`
 	UpdatedAt   time.Time          `json:"updatedAt" validate:"required"`

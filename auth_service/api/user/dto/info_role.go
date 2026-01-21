@@ -9,7 +9,7 @@ import (
 
 type InfoRole struct {
 	ID   primitive.ObjectID `json:"_id" binding:"required" validate:"required"`
-	Code model.RoleCode     `json:"code" binding:"required" validate:"required,rolecode"`
+	Code model.RoleCode     `json:"code" binding:"required" validate:"required,uppercase"`
 }
 
 func NewInfoRole(role *model.Role) *InfoRole {
