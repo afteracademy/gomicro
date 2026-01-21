@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/config"
 	"github.com/afteracademy/goserve/v2/micro"
 	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
 	"github.com/afteracademy/goserve/v2/redis"
+	"github.com/gin-gonic/gin"
 )
 
 type Shutdown = func()
@@ -56,7 +56,7 @@ func create(env *config.Env) (micro.Router, Module, Shutdown) {
 		NatsUrl:            env.NatsUrl,
 		NatsServiceName:    env.NatsServiceName,
 		NatsServiceVersion: env.NatsServiceVersion,
-		Timeout:            time.Second * 10,
+		Timeout:            time.Duration(env.NatsTimeoutSec) * time.Second,
 	}
 
 	natsClient := micro.NewNatsClient(&natsConfig)

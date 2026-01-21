@@ -29,6 +29,7 @@ type Env struct {
 	NatsUrl            string `mapstructure:"NATS_URL"`
 	NatsServiceName    string `mapstructure:"NATS_SERVICE_NAME"`
 	NatsServiceVersion string `mapstructure:"NATS_SERVICE_VERSION"`
+	NatsTimeoutSec     uint16 `mapstructure:"NATS_TIMEOUT_SEC"`
 }
 
 func NewEnv(filename string, override bool) *Env {

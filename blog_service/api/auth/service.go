@@ -3,7 +3,7 @@ package auth
 import (
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/goserve/v2/micro"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 const NATS_TOPIC_AUTH = "auth.authentication"
@@ -13,7 +13,7 @@ const NATS_TOPIC_USERPROFILE = "auth.profile.user"
 type Service interface {
 	Authenticate(token string) (*message.User, error)
 	Authorize(user *message.User, roles ...string) error
-	FindUserPublicProfile(userId primitive.ObjectID) (*message.User, error)
+	FindUserPublicProfile(userId uuid.UUID) (*message.User, error)
 }
 
 type service struct {
@@ -37,7 +37,7 @@ func (s *service) Authorize(user *message.User, roles ...string) error {
 	return err
 }
 
-func (s *service) FindUserPublicProfile(userId primitive.ObjectID) (*message.User, error) {
-	msg := message.NewText(userId.Hex())
+func (s *service) FindUserPublicProfile(userId uuid.UUID) (*message.User, error) {
+	msg := message.NewText(userId.String())
 	return micro.RequestNats[message.Text, message.User](s.natsClient, NATS_TOPIC_USERPROFILE, msg)
 }

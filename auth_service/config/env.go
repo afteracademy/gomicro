@@ -29,6 +29,7 @@ type Env struct {
 	NatsUrl            string `mapstructure:"NATS_URL"`
 	NatsServiceName    string `mapstructure:"NATS_SERVICE_NAME"`
 	NatsServiceVersion string `mapstructure:"NATS_SERVICE_VERSION"`
+	NatsTimeoutSec     uint16 `mapstructure:"NATS_TIMEOUT_SEC"`
 	// keys
 	RSAPrivateKeyPath string `mapstructure:"RSA_PRIVATE_KEY_PATH"`
 	RSAPublicKeyPath  string `mapstructure:"RSA_PUBLIC_KEY_PATH"`

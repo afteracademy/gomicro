@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/goserve/v2/mongo"
+	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	mongod "go.mongodb.org/mongo-driver/mongo"
@@ -22,7 +23,7 @@ type Blog struct {
 	Text        *string            `bson:"text,omitempty"`
 	DraftText   string             `bson:"draftText" validate:"required"`
 	Tags        []string           `bson:"tags" validate:"required"`
-	Author      primitive.ObjectID `bson:"author" validate:"required"`
+	Author      uuid.UUID          `bson:"author" validate:"required"`
 	ImgURL      *string            `bson:"imgUrl,omitempty"`
 	Slug        string             `bson:"slug" validate:"required,min=3,max=200"`
 	Score       float64            `bson:"score" validate:"min=0,max=1"`
@@ -31,8 +32,8 @@ type Blog struct {
 	Published   bool               `bson:"published"`
 	Status      bool               `bson:"status"`
 	PublishedAt *time.Time         `bson:"publishedAt,omitempty"`
-	CreatedBy   primitive.ObjectID `bson:"createdBy" validate:"required"`
-	UpdatedBy   primitive.ObjectID `bson:"updatedBy" validate:"required"`
+	CreatedBy   uuid.UUID          `bson:"createdBy" validate:"required"`
+	UpdatedBy   uuid.UUID          `bson:"updatedBy" validate:"required"`
 	CreatedAt   time.Time          `bson:"createdAt" validate:"required"`
 	UpdatedAt   time.Time          `bson:"updatedAt" validate:"required"`
 }

@@ -11,7 +11,7 @@
       "env": {},
       "args": []
     },
-		{
+    {
       "name": "Blog Service",
       "type": "go",
       "request": "launch",
@@ -20,6 +20,13 @@
       "cwd": "${workspaceFolder}/blog_service",
       "env": {},
       "args": []
+    }
+  ],
+  "compounds": [
+    {
+      "name": "All Services",
+      "configurations": ["Auth Service", "Blog Service"],
+      "stopAll": true
     }
   ]
 }

@@ -51,7 +51,7 @@ func create(env *config.Env) (micro.Router, Module, Shutdown) {
 		NatsUrl:            env.NatsUrl,
 		NatsServiceName:    env.NatsServiceName,
 		NatsServiceVersion: env.NatsServiceVersion,
-		Timeout:            time.Second * 10,
+		Timeout:            time.Duration(env.NatsTimeoutSec) * time.Second,
 	}
 
 	natsClient := micro.NewNatsClient(&natsConfig)

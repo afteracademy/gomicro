@@ -4,13 +4,13 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 type InfoAuthor struct {
-	ID            primitive.ObjectID `json:"_id" binding:"required" validate:"required"`
-	Name          string             `json:"name" binding:"required" validate:"required"`
-	ProfilePicURL *string            `json:"profilePicUrl,omitempty" validate:"omitempty,url"`
+	ID            uuid.UUID `json:"_id" binding:"required" validate:"required"`
+	Name          string    `json:"name" binding:"required" validate:"required"`
+	ProfilePicURL *string   `json:"profilePicUrl,omitempty" validate:"omitempty,url"`
 }
 
 func NewInfoPrivateUser(user *message.User) *InfoAuthor {

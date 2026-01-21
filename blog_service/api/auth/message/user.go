@@ -1,7 +1,7 @@
 package message
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 type RoleCode string
@@ -14,8 +14,8 @@ const (
 )
 
 type User struct {
-	ID            primitive.ObjectID `json:"_id"`
-	Name          string             `json:"name"`
-	Email         string             `json:"email"`
-	ProfilePicURL *string            `json:"profilePicUrl,omitempty"`
+	ID            uuid.UUID `json:"id" validate:"required,uuid"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	ProfilePicURL *string   `json:"profilePicUrl,omitempty"`
 }
