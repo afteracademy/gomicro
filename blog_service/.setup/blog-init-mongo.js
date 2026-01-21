@@ -5,6 +5,12 @@ function seed(dbName, user, password) {
     pwd: password,
     roles: [{ role: "readWrite", db: dbName }],
   });
+
+  db.createCollection("dummy");
+
+  db.dummy.insert({
+    value: "This is a dummy document",
+  });
 }
 
 seed("blog-db", "blog-db-user", "changeit");

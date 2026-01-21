@@ -94,16 +94,12 @@ services:
     image: postgres:18.1
     restart: unless-stopped
     env_file: ./auth_service/.env
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_USER_PWD}
     ports:
       - '5432:5432'
     volumes:
-      - ./auth_service/.extra/setup/auth-init-pg-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-db.sql:ro
-      - ./auth_service/.extra/setup/auth-init-pg-test-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-test-db.sql:ro
-      - postgres-data:/var/lib/postgresql/data
+      - ./auth_service/.setup/auth-init-pg-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-db.sql:ro
+      - ./auth_service/.setup/auth-init-pg-test-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-test-db.sql:ro
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
       interval: 10s
@@ -112,19 +108,50 @@ services:
     networks:
       - gomicro-network
 
+    # Database migration for auth service (database) if data seed not used
+  # migrate-auth-db:
+  #   image: migrate/migrate
+  #   env_file: ./auth_service/.env
+  #   volumes:
+  #     - ./auth_service/migrations:/migrations
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   entrypoint: ["/bin/sh", "-c"]
+  #   command:
+  #     - |
+  #       migrate -path /migrations -database "postgres://$${DB_USER}:$${DB_USER_PWD}@postgres:5432/$${DB_NAME}?sslmode=disable" up
+  #   networks:
+  #     - gomicro-network
+  #   restart: on-failure
+
+  # Database migration for auth service (test database)
+  migrate-auth-test-db:
+    image: migrate/migrate
+    env_file: ./auth_service/.test.env
+    volumes:
+      - ./auth_service/migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        migrate -path /migrations -database "postgres://$${DB_USER}:$${DB_USER_PWD}@postgres:5432/$${DB_NAME}?sslmode=disable" up
+    networks:
+      - gomicro-network
+    restart: on-failure
+
   # Blog Service Database (MongoDB)
   mongo:
     image: mongo:8.0.9
     restart: unless-stopped
     env_file: ./blog_service/.env
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${DB_ADMIN}
-      - MONGO_INITDB_ROOT_PASSWORD=${DB_ADMIN_PWD}
     ports:
       - '27017:27017'
     command: mongod --bind_ip_all
     volumes:
-      - ./blog_service/.extra/setup/blog-init-mongo.js:/docker-entrypoint-initdb.d/blog-init-mongo.js:ro
+      - ./blog_service/.setup/blog-init-mongo.js:/docker-entrypoint-initdb.d/blog-init-mongo.js:ro
       - mongo-data:/data/db
     networks:
       - gomicro-network
@@ -136,7 +163,7 @@ services:
     env_file: ./auth_service/.env
     ports:
       - '6379:6379'
-    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass changeit
     volumes:
       - redis-auth-data:/data
     healthcheck:
@@ -154,7 +181,7 @@ services:
     env_file: ./blog_service/.env
     ports:
       - '6380:6379'
-    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    command: redis-server --bind 0.0.0.0 --save 20 1 --loglevel warning --requirepass changeit
     volumes:
       - redis-blog-data:/data
     healthcheck:
@@ -175,25 +202,6 @@ services:
       - "${NATS_MANAGEMENT_PORT:-8222}:8222"
     networks:
       - gomicro-network
-
-  # Database migration for auth service
-  migrate-auth:
-    image: migrate/migrate
-    env_file: ./auth_service/.env
-    volumes:
-      - ./auth_service/migrations:/migrations
-    depends_on:
-      postgres:
-        condition: service_healthy
-    command:
-      [
-        "-path", "/migrations",
-        "-database", "postgres://$${DB_USER}:$${DB_USER_PWD}@postgres:5432/$${DB_NAME}?sslmode=disable",
-        "up"
-      ]
-    networks:
-      - gomicro-network
-    restart: on-failure
 
 networks:
   gomicro-network:

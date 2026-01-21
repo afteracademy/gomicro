@@ -1,6 +1,6 @@
 # gomicro - Go Microservices Architecture
 
-![Banner](.extra/docs/gomicro-banner.png)
+![Banner](.docs/gomicro-banner.png)
 
 ## Create Blogging Platform Microservices
 This project creates a blogging API service using [goserve](https://github.com/afteracademy/goserve) micro framework. In this project Kong is used as the API gateway and NATS for the interservice communication. Each service has its own Mongo database and Redis database (Note: a single mongo and redis server is used for multiple databases).
@@ -24,7 +24,7 @@ This project breaks down the monolithic go blog backend project provided at [gos
 3. **blog_service**: blog APIs code 
 
 **Helper/Optional Directories**
-1. **.extra**: mongo script for initialization inside docker, other web assets and documents
+1. **.setup**: mongo script for initialization inside docker, other web assets and documents
 2. **.tools**: RSA key generator, and .env copier
 3. **.vscode**: editor config and service debug launch settings
 
@@ -54,10 +54,10 @@ This project breaks down the monolithic go blog backend project provided at [gos
 ## The project runs in 2 configurations
 
 **1. Without Load Balancing**
-![Banner](.extra/docs/system.png)
+![Banner](.docs/system.png)
 
 **2. With Load Balancing**
-![Banner](.extra/docs/system-load-balanced.png)
+![Banner](.docs/system-load-balanced.png)
 
 ## Installation Instructions
 vscode is the recommended editor - dark theme 
