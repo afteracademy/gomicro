@@ -6,7 +6,7 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/api/author/dto"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
-	"github.com/afteracademy/goserve/utils"
+	"github.com/afteracademy/goserve/v2/utility"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,12 +28,12 @@ func EmptyInfoPublicBlog() *PublicBlog {
 }
 
 func NewPublicBlog(blog *model.Blog, author *message.User) (*PublicBlog, error) {
-	b, err := utils.MapTo[PublicBlog](blog)
+	b, err := utility.MapTo[PublicBlog](blog)
 	if err != nil {
 		return nil, err
 	}
 
-	b.Author, err = utils.MapTo[dto.InfoAuthor](author)
+	b.Author, err = utility.MapTo[dto.InfoAuthor](author)
 	if err != nil {
 		return nil, err
 	}

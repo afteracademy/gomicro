@@ -118,10 +118,6 @@ type SampleMessage struct {
   Field2 string `json:"field2,omitempty"`
 }
 
-func EmptySampleMessage() *SampleMessage {
-  return &SampleMessage{}
-}
-
 func NewSampleMessage(f1, f2 string) *SampleMessage {
   return &SampleMessage{
     Field1: f1,
@@ -147,7 +143,7 @@ import (
 )
 
 type controller struct {
-  micro.BaseController
+  micro.Controller
   service Service
 }
 
@@ -157,7 +153,7 @@ func NewController(
   service Service,
 ) micro.Controller {
   return &controller{
-    BaseController: micro.NewBaseController("/sample", authMFunc, authorizeMFunc),
+    Controller: micro.NewController("/sample", authMFunc, authorizeMFunc),
     service:        service,
   }
 }
@@ -174,21 +170,21 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 func (c *controller) pingHandler(req micro.NatsRequest) {
   fmt.Println(string(req.Data()))
   msg := message.NewSampleMessage("from", "microservice2")
-  c.SendNats(req).Message(msg)
+  micro.SendNatsMessage(msg)
 }
 
 func (c *controller) getEchoHandler(ctx *gin.Context) {
-  c.Send(ctx).SuccessMsgResponse("pong!")
+  network.SendSuccessMsgResponse(ctx, "pong!")
 }
 
 func (c *controller) getServicePingHandler(ctx *gin.Context) {
   msg := message.NewSampleMessage("from", "microservice2")
   received, err := c.service.GetSampleMessage(msg)
   if err != nil {
-    c.Send(ctx).MixedError(err)
+    network.SendMixedError(ctx, err)
     return
   }
-  c.Send(ctx).SuccessDataResponse("success", received)
+  network.SendSuccessDataResponse(ctx, "success", received)
 }
 
 ```
@@ -217,7 +213,6 @@ type Service interface {
 }
 
 type service struct {
-  network.BaseService
   sampleQueryBuilder   mongo.QueryBuilder[model.Sample]
   infoSampleCache      redis.Cache[dto.InfoSample]
   sampleRequestBuilder micro.RequestBuilder[message.SampleMessage]
@@ -225,7 +220,6 @@ type service struct {
 
 func NewService(db mongo.Database, store redis.Store, natsClient micro.NatsClient) Service {
   return &service{
-    BaseService:          network.NewBaseService(),
     sampleQueryBuilder:   mongo.NewQueryBuilder[model.Sample](db, model.CollectionName),
     infoSampleCache:      redis.NewCache[dto.InfoSample](store),
     sampleRequestBuilder: micro.NewRequestBuilder[message.SampleMessage](natsClient, "microservice1.sample.ping"),

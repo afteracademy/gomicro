@@ -5,7 +5,6 @@ import (
 
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
-	"github.com/afteracademy/goserve/utils"
 	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,12 +34,12 @@ func EmptyInfoPrivateBlog() *PrivateBlog {
 }
 
 func NewPrivateBlog(blog *model.Blog, author *message.User) (*PrivateBlog, error) {
-	b, err := utils.MapTo[PrivateBlog](blog)
+	b, err := utility.MapTo[PrivateBlog](blog)
 	if err != nil {
 		return nil, err
 	}
 
-	b.Author, err = utils.MapTo[InfoAuthor](author)
+	b.Author, err = utility.MapTo[InfoAuthor](author)
 	if err != nil {
 		return nil, err
 	}

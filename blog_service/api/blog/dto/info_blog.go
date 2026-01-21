@@ -2,7 +2,7 @@ package dto
 
 import (
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
-	"github.com/afteracademy/goserve/utils"
+	"github.com/afteracademy/goserve/v2/utility"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,5 +17,5 @@ type InfoBlog struct {
 }
 
 func NewInfoBlog(blog *model.Blog) (*InfoBlog, error) {
-	return utils.MapTo[InfoBlog](blog)
+	return utility.MapTo[InfoBlog](blog)
 }

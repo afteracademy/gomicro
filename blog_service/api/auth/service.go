@@ -6,6 +6,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const NATS_TOPIC_AUTH = "auth.authentication"
+const NATS_TOPIC_AUTHZ = "auth.authorization"
+const NATS_TOPIC_USERPROFILE = "auth.profile.user"
+
 type Service interface {
 	Authenticate(token string) (*message.User, error)
 	Authorize(user *message.User, roles ...string) error
@@ -13,31 +17,27 @@ type Service interface {
 }
 
 type service struct {
-	authRequestBuilder  micro.RequestBuilder[message.User]
-	authzRequestBuilder micro.RequestBuilder[message.User]
-	userRequestBuilder  micro.RequestBuilder[message.User]
+	natsClient micro.NatsClient
 }
 
 func NewService(natsClient micro.NatsClient) Service {
 	return &service{
-		authRequestBuilder:  micro.NewRequestBuilder[message.User](natsClient, "auth.authentication"),
-		authzRequestBuilder: micro.NewRequestBuilder[message.User](natsClient, "auth.authorization"),
-		userRequestBuilder:  micro.NewRequestBuilder[message.User](natsClient, "auth.profile.user"),
+		natsClient: natsClient,
 	}
 }
 
 func (s *service) Authenticate(token string) (*message.User, error) {
 	msg := message.NewText(token)
-	return s.authRequestBuilder.Request(msg).Nats()
+	return micro.RequestNats[message.Text, message.User](s.natsClient, NATS_TOPIC_AUTH, msg)
 }
 
 func (s *service) Authorize(user *message.User, roles ...string) error {
 	msg := message.NewUserRole(user, roles...)
-	_, err := s.authzRequestBuilder.Request(msg).Nats()
+	_, err := micro.RequestNats[message.UserRole, message.User](s.natsClient, NATS_TOPIC_AUTHZ, msg)
 	return err
 }
 
 func (s *service) FindUserPublicProfile(userId primitive.ObjectID) (*message.User, error) {
 	msg := message.NewText(userId.Hex())
-	return s.userRequestBuilder.Request(msg).Nats()
+	return micro.RequestNats[message.Text, message.User](s.natsClient, NATS_TOPIC_USERPROFILE, msg)
 }

@@ -1,7 +1,5 @@
-github.com/afteracademy/goserve/v2 v2.0.4 h1:llMrC2L2b5ZKr3t9yWP2SlzlHtOa3I6sXje3gPEDN/s=
-github.com/afteracademy/goserve/v2 v2.0.4/go.mod h1:zhdI7XeDYrycWLRoNwwf1aITdEF9KbKZERxgllzv7/w=
-github.com/afteracademy/goserve/v2 v2.0.5 h1:R/0ciTuZNZ6cZg0kV/NjBs1GF7G4xMxULBwnO+bWEIg=
-github.com/afteracademy/goserve/v2 v2.0.5/go.mod h1:zhdI7XeDYrycWLRoNwwf1aITdEF9KbKZERxgllzv7/w=
+github.com/afteracademy/goserve/v2 v2.1.1 h1:RegiXqul93La9n6VYsSbHy1Wdg7wJl9QtLLmlgqkGWE=
+github.com/afteracademy/goserve/v2 v2.1.1/go.mod h1:zhdI7XeDYrycWLRoNwwf1aITdEF9KbKZERxgllzv7/w=
 github.com/antithesishq/antithesis-sdk-go v0.5.0-default-no-op h1:Ucf+QxEKMbPogRO5guBNe5cgd9uZgfoJLOYs8WWhtjM=
 github.com/antithesishq/antithesis-sdk-go v0.5.0-default-no-op/go.mod h1:IUpT2DPAKh6i/YhSbt6Gl3v2yvUZjmKncl7U91fup7E=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=

@@ -3,8 +3,7 @@ module github.com/afteracademy/gomicro/blog-service
 go 1.25.6
 
 require (
-	github.com/afteracademy/goserve v1.2.0
-	github.com/afteracademy/goserve/v2 v2.0.5
+	github.com/afteracademy/goserve/v2 v2.1.1
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/spf13/viper v1.21.0

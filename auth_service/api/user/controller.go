@@ -33,25 +33,25 @@ func (c *controller) MountNats(group micro.NatsGroup) {
 }
 
 func (c *controller) userHandler(req micro.NatsRequest) {
-	text, err := micro.ParseMsg[message.Text](req.Data())
+	text, err := micro.JsonToMsg[message.Text](req.Data())
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
 	userId, err := primitive.ObjectIDFromHex(text.Value)
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
 	user, err := c.service.FindUserPublicProfile(userId)
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
-	micro.SendNatsMessage(req, message.NewUser(user))
+	micro.RespondNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {

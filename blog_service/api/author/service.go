@@ -8,7 +8,7 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/blog"
 	blogDto "github.com/afteracademy/gomicro/blog-service/api/blog/dto"
 	"github.com/afteracademy/gomicro/blog-service/api/blog/model"
-	"github.com/afteracademy/goserve/utils"
+	"github.com/afteracademy/gomicro/blog-service/utils"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"

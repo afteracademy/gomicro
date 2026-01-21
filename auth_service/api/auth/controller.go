@@ -38,41 +38,41 @@ func (c *controller) MountNats(group micro.NatsGroup) {
 }
 
 func (c *controller) authenticationHandler(req micro.NatsRequest) {
-	text, err := micro.ParseMsg[message.Text](req.Data())
+	text, err := micro.JsonToMsg[message.Text](req.Data())
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
 	user, _, err := c.service.Authenticate(text.Value)
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
-	micro.SendNatsMessage(req, message.NewUser(user))
+	micro.RespondNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) authorizationHandler(req micro.NatsRequest) {
-	userRole, err := micro.ParseMsg[message.UserRole](req.Data())
+	userRole, err := micro.JsonToMsg[message.UserRole](req.Data())
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
 	user, err := c.userService.FindUserById(userRole.User.ID)
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
 	err = c.service.Authorize(user, userRole.Roles...)
 	if err != nil {
-		micro.SendNatsError(req, err)
+		micro.RespondNatsError(req, err)
 		return
 	}
 
-	micro.SendNatsMessage(req, message.NewUser(user))
+	micro.RespondNatsMessage(req, message.NewUser(user))
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {
