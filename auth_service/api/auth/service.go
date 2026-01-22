@@ -12,10 +12,10 @@ import (
 	"github.com/afteracademy/gomicro/auth-service/config"
 	"github.com/afteracademy/gomicro/auth-service/utils"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -42,7 +42,7 @@ type Service interface {
 }
 
 type service struct {
-	db          *pgxpool.Pool
+	db          postgres.Database
 	userService user.Service
 	// token
 	rsaPrivateKey        *rsa.PrivateKey
@@ -54,7 +54,7 @@ type service struct {
 }
 
 func NewService(
-	db *pgxpool.Pool,
+	db postgres.Database,
 	env *config.Env,
 	userService user.Service,
 ) Service {
@@ -213,7 +213,7 @@ func (s *service) SignOut(keystore *model.Keystore) error {
 		WHERE id = $1
 	`
 
-	_, err := s.db.Exec(ctx, query, keystore.ID)
+	_, err := s.db.Pool().Exec(ctx, query, keystore.ID)
 	return err
 }
 
@@ -354,7 +354,7 @@ func (s *service) CreateKeystore(
 			updated_at
 	`
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		client.ID,
@@ -395,7 +395,7 @@ func (s *service) FetchKeystore(
 
 	var ks model.Keystore
 
-	err := s.db.QueryRow(ctx, query, client.ID, primaryKey).
+	err := s.db.Pool().QueryRow(ctx, query, client.ID, primaryKey).
 		Scan(
 			&ks.ID,
 			&ks.UserID,
@@ -438,7 +438,7 @@ func (s *service) FindRefreshKeystore(
 
 	var ks model.Keystore
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		client.ID,
@@ -540,7 +540,7 @@ func (s *service) FetchApiKey(
 
 	var apiKey model.ApiKey
 
-	err := s.db.QueryRow(ctx, query, key).
+	err := s.db.Pool().QueryRow(ctx, query, key).
 		Scan(
 			&apiKey.ID,
 			&apiKey.Key,
@@ -587,7 +587,7 @@ func (s *service) CreateApiKey(
 			updated_at
 	`
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		key,
@@ -621,7 +621,7 @@ func (s *service) DeleteApiKey(
 		WHERE id = $1
 	`
 
-	tag, err := s.db.Exec(ctx, query, apiKey.ID)
+	tag, err := s.db.Pool().Exec(ctx, query, apiKey.ID)
 	if err != nil {
 		return false, err
 	}

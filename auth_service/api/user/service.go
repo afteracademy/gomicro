@@ -6,8 +6,8 @@ import (
 	"github.com/afteracademy/gomicro/auth-service/api/user/dto"
 	"github.com/afteracademy/gomicro/auth-service/api/user/model"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -29,10 +29,10 @@ type Service interface {
 }
 
 type service struct {
-	db *pgxpool.Pool
+	db postgres.Database
 }
 
-func NewService(db *pgxpool.Pool) Service {
+func NewService(db postgres.Database) Service {
 	return &service{
 		db: db,
 	}
@@ -81,7 +81,7 @@ func (s *service) IsEmailExists(
 	`
 
 	var exists bool
-	err := s.db.QueryRow(ctx, query, email).Scan(&exists)
+	err := s.db.Pool().QueryRow(ctx, query, email).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -108,7 +108,7 @@ func (s *service) FindRoleByCode(
 
 	var role model.Role
 
-	err := s.db.QueryRow(ctx, query, code).
+	err := s.db.Pool().QueryRow(ctx, query, code).
 		Scan(
 			&role.ID,
 			&role.Code,
@@ -145,7 +145,7 @@ func (s *service) FindRoles(
 		  AND status = TRUE
 	`
 
-	rows, err := s.db.Query(ctx, query, roleIDs)
+	rows, err := s.db.Pool().Query(ctx, query, roleIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (s *service) FindUserById(
 
 	var user model.User
 
-	err := s.db.QueryRow(ctx, userQuery, id).
+	err := s.db.Pool().QueryRow(ctx, userQuery, id).
 		Scan(
 			&user.ID,
 			&user.Email,
@@ -244,7 +244,7 @@ func (s *service) FindUserByEmail(
 
 	var user model.User
 
-	err := s.db.QueryRow(ctx, userQuery, email).
+	err := s.db.Pool().QueryRow(ctx, userQuery, email).
 		Scan(
 			&user.ID,
 			&user.Email,
@@ -284,7 +284,7 @@ func (s *service) FindUserRoles(ctx context.Context, user model.User) ([]*model.
 		WHERE ur.user_id = $1
 		  AND r.status = TRUE
 	`
-	rows, err := s.db.Query(ctx, roleQuery, user.ID)
+	rows, err := s.db.Pool().Query(ctx, roleQuery, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +319,7 @@ func (s *service) CreateUser(
 
 	var user model.User
 
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.Pool().Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +413,7 @@ func (s *service) FindUserPrivateProfile(
 
 	var result model.User
 
-	err := s.db.QueryRow(ctx, query, user.ID).
+	err := s.db.Pool().QueryRow(ctx, query, user.ID).
 		Scan(
 			&result.ID,
 			&result.Email,
@@ -449,7 +449,7 @@ func (s *service) FindUserPublicProfile(
 
 	var user model.User
 
-	err := s.db.QueryRow(ctx, query, userID).
+	err := s.db.Pool().QueryRow(ctx, query, userID).
 		Scan(&user.ID, &user.Name, &user.ProfilePicURL)
 
 	if err != nil {
@@ -465,7 +465,7 @@ func (s *service) DeleteUserByEmail(ctx context.Context, email string) (bool, er
 		WHERE email = $1
 	`
 
-	tag, err := s.db.Exec(ctx, query, email)
+	tag, err := s.db.Pool().Exec(ctx, query, email)
 	if err != nil {
 		return false, err
 	}
@@ -491,7 +491,7 @@ func (s *service) CreateRole(code model.RoleCode) (*model.Role, error) {
 			updated_at
 	`
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		code,
@@ -518,7 +518,7 @@ func (s *service) DeleteRole(role *model.Role) (bool, error) {
 		WHERE id = $1
 	`
 
-	tag, err := s.db.Exec(ctx, query, role.ID)
+	tag, err := s.db.Pool().Exec(ctx, query, role.ID)
 	if err != nil {
 		return false, err
 	}

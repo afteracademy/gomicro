@@ -59,8 +59,8 @@ func NewModule(
 	store redis.Store,
 	natsClient micro.NatsClient,
 ) Module {
-	userService := user.NewService(db.Pool())
-	authService := auth.NewService(db.Pool(), env, userService)
+	userService := user.NewService(db)
+	authService := auth.NewService(db, env, userService)
 	return &module{
 		Context:     context,
 		Env:         env,
