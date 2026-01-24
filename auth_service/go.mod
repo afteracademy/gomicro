@@ -5,7 +5,6 @@ go 1.25.6
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
-	github.com/jackc/pgx/v5 v5.8.0
 )
 
 require (
@@ -17,6 +16,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.8.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect
@@ -44,7 +44,7 @@ require (
 )
 
 require (
-	github.com/afteracademy/goserve/v2 v2.1.1
+	github.com/afteracademy/goserve/v2 v2.1.2
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.14.2 // indirect
 	github.com/bytedance/sonic/loader v0.4.0 // indirect

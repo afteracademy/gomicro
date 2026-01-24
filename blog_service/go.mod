@@ -3,9 +3,10 @@ module github.com/afteracademy/gomicro/blog-service
 go 1.25.6
 
 require (
-	github.com/afteracademy/goserve/v2 v2.1.1
+	github.com/afteracademy/goserve/v2 v2.1.2
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.30.1
+	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.21.0
 	go.mongodb.org/mongo-driver v1.17.6
 )
@@ -27,7 +28,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect

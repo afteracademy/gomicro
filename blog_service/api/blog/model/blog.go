@@ -63,10 +63,6 @@ func NewBlog(slug, title, description, draftText string, tags []string, author *
 	return &b, nil
 }
 
-func (blog *Blog) GetValue() *Blog {
-	return blog
-}
-
 func (blog *Blog) Validate() error {
 	validate := validator.New()
 	return validate.Struct(blog)
