@@ -4,10 +4,13 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"regexp"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
 )
+
+var healthRegex = regexp.MustCompile(`^/[^/]+/health$`)
 
 type Config struct {
 	ApiKeyVerificationURLs []string `json:"verification_urls"`
@@ -18,11 +21,23 @@ func New() any {
 }
 
 func (conf *Config) Access(kong *pdk.PDK) {
+
+	// Skip health check paths
+	path, err := kong.Request.GetPath()
+	if err == nil && healthRegex.MatchString(path) {
+		return
+	}
+
 	headers := map[string][]string{"Content-Type": {"application/json"}}
 
 	apiKey, err := kong.Request.GetHeader("x-api-key")
 	if err != nil {
 		kong.Response.Exit(401, []byte(err.Error()), headers)
+		return
+	}
+
+	if apiKey == "" {
+		kong.Response.Exit(401, []byte(`{"code":"10001","status":"401","message":"x-api-key header is missing"}`), headers)
 		return
 	}
 

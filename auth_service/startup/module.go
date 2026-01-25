@@ -5,6 +5,7 @@ import (
 
 	"github.com/afteracademy/gomicro/auth-service/api/auth"
 	authMW "github.com/afteracademy/gomicro/auth-service/api/auth/middleware"
+	"github.com/afteracademy/gomicro/auth-service/api/health"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
 	"github.com/afteracademy/gomicro/auth-service/config"
 	"github.com/afteracademy/goserve/v2/micro"
@@ -17,13 +18,14 @@ import (
 type Module micro.Module[module]
 
 type module struct {
-	Context     context.Context
-	Env         *config.Env
-	DB          postgres.Database
-	Store       redis.Store
-	NatsClient  micro.NatsClient
-	UserService user.Service
-	AuthService auth.Service
+	Context       context.Context
+	Env           *config.Env
+	DB            postgres.Database
+	Store         redis.Store
+	NatsClient    micro.NatsClient
+	UserService   user.Service
+	AuthService   auth.Service
+	HealthService health.Service
 }
 
 func (m *module) GetInstance() *module {
@@ -32,6 +34,7 @@ func (m *module) GetInstance() *module {
 
 func (m *module) Controllers() []micro.Controller {
 	return []micro.Controller{
+		health.NewController(m.HealthService),
 		auth.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.AuthService, m.UserService),
 		user.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.UserService),
 	}
@@ -61,13 +64,16 @@ func NewModule(
 ) Module {
 	userService := user.NewService(db)
 	authService := auth.NewService(db, env, userService)
+	healthService := health.NewService()
+
 	return &module{
-		Context:     context,
-		Env:         env,
-		DB:          db,
-		Store:       store,
-		NatsClient:  natsClient,
-		UserService: userService,
-		AuthService: authService,
+		Context:       context,
+		Env:           env,
+		DB:            db,
+		Store:         store,
+		NatsClient:    natsClient,
+		UserService:   userService,
+		AuthService:   authService,
+		HealthService: healthService,
 	}
 }

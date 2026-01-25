@@ -9,6 +9,7 @@ import (
 	"github.com/afteracademy/gomicro/blog-service/api/blog"
 	"github.com/afteracademy/gomicro/blog-service/api/blogs"
 	"github.com/afteracademy/gomicro/blog-service/api/editor"
+	"github.com/afteracademy/gomicro/blog-service/api/health"
 	"github.com/afteracademy/gomicro/blog-service/config"
 	"github.com/afteracademy/goserve/v2/micro"
 	coreMW "github.com/afteracademy/goserve/v2/middleware"
@@ -20,13 +21,14 @@ import (
 type Module micro.Module[module]
 
 type module struct {
-	Context     context.Context
-	Env         *config.Env
-	DB          mongo.Database
-	Store       redis.Store
-	NatsClient  micro.NatsClient
-	AuthService auth.Service
-	BlogService blog.Service
+	Context       context.Context
+	Env           *config.Env
+	DB            mongo.Database
+	Store         redis.Store
+	NatsClient    micro.NatsClient
+	AuthService   auth.Service
+	BlogService   blog.Service
+	HealthService health.Service
 }
 
 func (m *module) GetInstance() *module {
@@ -35,6 +37,7 @@ func (m *module) GetInstance() *module {
 
 func (m *module) Controllers() []micro.Controller {
 	return []micro.Controller{
+		health.NewController(m.HealthService),
 		blog.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.BlogService),
 		blogs.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), blogs.NewService(m.DB, m.Store)),
 		author.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), author.NewService(m.DB, m.BlogService)),
@@ -60,14 +63,16 @@ func (m *module) AuthorizationProvider() network.AuthorizationProvider {
 func NewModule(context context.Context, env *config.Env, db mongo.Database, store redis.Store, natsClient micro.NatsClient) Module {
 	authService := auth.NewService(natsClient)
 	blogService := blog.NewService(db, store, authService)
+	healthService := health.NewService()
 
 	return &module{
-		Context:     context,
-		Env:         env,
-		DB:          db,
-		Store:       store,
-		NatsClient:  natsClient,
-		AuthService: authService,
-		BlogService: blogService,
+		Context:       context,
+		Env:           env,
+		DB:            db,
+		Store:         store,
+		NatsClient:    natsClient,
+		AuthService:   authService,
+		BlogService:   blogService,
+		HealthService: healthService,
 	}
 }

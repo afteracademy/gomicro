@@ -23,11 +23,17 @@ services:
     restart: unless-stopped
     env_file:
       - ./auth_service/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
       redis-auth:
-        condition: service_started
+        condition: service_healthy
       nats:
         condition: service_started
     networks:
@@ -41,11 +47,17 @@ services:
     restart: unless-stopped
     env_file:
       - ./blog_service/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     depends_on:
       mongo:
-        condition: service_started
+        condition: service_healthy
       redis-blog:
-        condition: service_started
+        condition: service_healthy
       nats:
         condition: service_started
     networks:
@@ -64,10 +76,15 @@ services:
       - ./auth_service/.setup/auth-init-pg-test-db.sql:/docker-entrypoint-initdb.d/auth-init-pg-test-db.sql:ro
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h localhost -p 5432 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     networks:
       - gomicro-network
 
@@ -116,6 +133,19 @@ services:
     volumes:
       - ./blog_service/.setup/blog-init-mongo.js:/docker-entrypoint-initdb.d/blog-init-mongo.js:ro
       - mongo-data:/data/db
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - >
+        mongosh --quiet
+        -u "$$MONGO_INITDB_ROOT_USERNAME"
+        -p "$$MONGO_INITDB_ROOT_PASSWORD"
+        --authenticationDatabase admin
+        --eval "db.runCommand({ ping: 1 }).ok"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     networks:
       - gomicro-network
 
@@ -130,10 +160,13 @@ services:
     volumes:
       - redis-auth-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test:
+        - CMD-SHELL
+        - redis-cli -a "$$REDIS_PASSWORD" ping
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 10s
     networks:
       - gomicro-network
 
@@ -148,10 +181,13 @@ services:
     volumes:
       - redis-blog-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test:
+      - CMD-SHELL
+      - redis-cli -a "$$REDIS_PASSWORD" ping
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 10s
     networks:
       - gomicro-network
 

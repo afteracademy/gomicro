@@ -1,5 +1,7 @@
 FROM golang:1.25.6-alpine
 
+RUN apk add --no-cache curl
+
 RUN adduser --disabled-password --gecos '' gouser
 
 RUN mkdir -p /home/gouser/project
