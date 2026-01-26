@@ -3,8 +3,8 @@ package common
 import (
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/blog-service/api/auth/message"
+	"github.com/gin-gonic/gin"
 )
 
 const (

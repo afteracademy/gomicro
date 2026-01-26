@@ -3,9 +3,9 @@ package common
 import (
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	authModel "github.com/afteracademy/gomicro/auth-service/api/auth/model"
 	userModel "github.com/afteracademy/gomicro/auth-service/api/user/model"
+	"github.com/gin-gonic/gin"
 )
 
 const (

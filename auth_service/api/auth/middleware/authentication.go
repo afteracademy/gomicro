@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/gomicro/auth-service/api/auth"
 	"github.com/afteracademy/gomicro/auth-service/api/user"
 	"github.com/afteracademy/gomicro/auth-service/common"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/gin-gonic/gin"
 )
 
 type authenticationProvider struct {

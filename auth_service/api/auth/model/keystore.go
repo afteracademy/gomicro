@@ -10,7 +10,7 @@ const KeystoreTableName = "keystore"
 
 type Keystore struct {
 	ID           uuid.UUID
-	UserID     uuid.UUID
+	UserID       uuid.UUID
 	PrimaryKey   string
 	SecondaryKey string
 	Status       bool

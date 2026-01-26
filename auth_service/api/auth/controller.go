@@ -25,7 +25,7 @@ func NewController(
 	userService user.Service,
 ) micro.Controller {
 	return &controller{
-		Controller: micro.NewController("/", authProvider, authorizeProvider),
+		Controller:     micro.NewController("/", authProvider, authorizeProvider),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 		userService:    userService,
